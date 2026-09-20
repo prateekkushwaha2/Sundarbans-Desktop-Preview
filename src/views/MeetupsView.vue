@@ -1750,3 +1750,4 @@ const visibleRegions = computed(() => {
     padding: 16px;
   }
 }
+</style>
