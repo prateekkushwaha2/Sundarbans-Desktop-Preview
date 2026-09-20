@@ -1,4 +1,3 @@
-```vue
 <template>
   <main class="meetups-page">
     <!-- =========================================================
@@ -1575,4 +1574,3 @@ function resetSearch() {
     width: 55px;
   }
 }
-```
