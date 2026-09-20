@@ -1,78 +1,91 @@
+```vue
 <template>
   <main class="meetups-page">
     <!-- =========================================================
-         INTRO
+         INTRO + SEARCH
          ========================================================= -->
     <section class="meetups-intro">
       <div class="container">
-        <div class="intro-grid">
-          <div>
-            <span class="eyebrow">Sundarbans House · Community</span>
+        <div class="intro-content">
+          <span class="eyebrow">Sundarbans House · Community</span>
 
-            <h1>
-              Find your
-              <span>people.</span>
-            </h1>
+          <h1>
+            Find your
+            <span>people.</span>
+          </h1>
 
-            <p class="intro-copy">
-              Discover meetups, connect with students in your city, and find
-              places to learn, collaborate and spend time together offline.
-            </p>
-          </div>
+          <p>
+            Discover people, meetups and communities around you.
+            Learn something, build something, or simply meet people
+            from the Sundarbans community.
+          </p>
+        </div>
 
-          <div class="intro-stats">
-            <div class="intro-stat">
-              <strong>{{ stats.meetups }}</strong>
-              <span>meetups recorded</span>
-            </div>
+        <!-- SEARCH -->
+        <div class="search-wrapper">
+          <Search :size="20" />
 
-            <div class="intro-stat">
-              <strong>{{ stats.cities }}</strong>
-              <span>active cities</span>
-            </div>
+          <input
+            v-model="searchQuery"
+            type="search"
+            placeholder="Search anything — city, meetup, venue, topic..."
+            aria-label="Search meetups"
+            @keyup.escape="clearSearch"
+          />
 
-            <div class="intro-stat">
-              <strong>{{ stats.attendance }}</strong>
-              <span>recorded attendance</span>
-            </div>
-          </div>
+          <span
+            v-if="searchQuery"
+            class="search-result-count"
+          >
+            {{ filteredMeetups.length }}
+          </span>
+
+          <button
+            v-if="searchQuery"
+            class="clear-search"
+            type="button"
+            aria-label="Clear search"
+            @click="clearSearch"
+          >
+            <X :size="17" />
+          </button>
         </div>
 
         <!-- =======================================================
-             DISCOVERY BAR
+             CITY — DIRECTLY BELOW SEARCH
              ======================================================= -->
-        <div class="discovery-panel">
-          <label class="search-box">
-            <Search :size="19" :stroke-width="1.8" />
-
-            <input
-              v-model="searchQuery"
-              type="search"
-              placeholder="Search meetups, cities, venues or topics..."
-              aria-label="Search meetups"
-            />
+        <div class="city-selector">
+          <div class="city-selector-header">
+            <span>Choose your city</span>
 
             <button
-              v-if="searchQuery"
-              class="clear-search"
+              v-if="selectedCity"
               type="button"
-              aria-label="Clear search"
-              @click="searchQuery = ''"
+              @click="selectedCity = ''"
             >
-              <X :size="16" />
+              Clear
             </button>
-          </label>
+          </div>
 
-          <div class="filters">
+          <div class="city-list">
             <button
-              v-for="filter in filters"
-              :key="filter.key"
               type="button"
-              class="sel"
-              :aria-pressed="activeFilter === filter.key"
-              @click="activeFilter = filter.key"
+              class="city-pill"
+              :class="{ active: selectedCity === '' }"
+              @click="selectedCity = ''"
             >
-              {{ filter.label }}
+              All cities
+            </button>
+
+            <button
+              v-for="city in cities"
+              :key="city.key"
+              type="button"
+              class="city-pill"
+              :class="{ active: selectedCity === city.key }"
+              @click="selectCity(city.key)"
+            >
+              {{ city.name }}
             </button>
           </div>
         </div>
@@ -80,116 +93,19 @@
     </section>
 
     <!-- =========================================================
-         UPCOMING
-         ========================================================= -->
-    <section class="meetup-section upcoming-section">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <span class="eyebrow">What's next</span>
-            <h2>Upcoming meetups</h2>
-          </div>
-
-          <span class="result-count">
-            {{ upcomingMeetups.length }}
-            {{ upcomingMeetups.length === 1 ? 'event' : 'events' }}
-          </span>
-        </div>
-
-        <div v-if="upcomingMeetups.length" class="events-grid">
-          <article
-            v-for="meetup in upcomingMeetups"
-            :key="meetup.key"
-            class="event-card event-card--upcoming"
-          >
-            <div class="event-status">
-              <span class="status-dot"></span>
-              Upcoming
-            </div>
-
-            <div class="event-card-body">
-              <span class="event-city">{{ meetup.city }}</span>
-
-              <h3>{{ meetup.title }}</h3>
-
-              <p v-if="meetup.about">
-                {{ meetup.about }}
-              </p>
-
-              <div class="event-details">
-                <span v-if="meetup.date">
-                  <CalendarDays :size="15" />
-                  {{ meetup.date }}
-                </span>
-
-                <span v-if="meetup.time">
-                  <Clock3 :size="15" />
-                  {{ meetup.time }}
-                </span>
-
-                <span v-if="meetup.location">
-                  <MapPin :size="15" />
-                  {{ meetup.location }}
-                </span>
-              </div>
-            </div>
-
-            <div class="event-footer">
-              <RouterLink
-                :to="`/meetups/${meetup.slug}`"
-                class="btn btn--primary btn--sm"
-              >
-                Explore chapter
-                <ArrowRight :size="15" />
-              </RouterLink>
-
-              <a
-                v-if="meetup.externalUrl"
-                :href="meetup.externalUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="external-link"
-              >
-                Event link
-                <ExternalLink :size="13" />
-              </a>
-            </div>
-          </article>
-        </div>
-
-        <div v-else class="empty-state">
-          <div class="empty-icon">
-            <CalendarDays :size="23" />
-          </div>
-
-          <div>
-            <h3>No upcoming meetup published yet</h3>
-
-            <p>
-              There isn't a future meetup in the current community data.
-              Browse previous meetups below or open your city chapter to stay
-              connected.
-            </p>
-          </div>
-
-          <RouterLink to="/community" class="btn btn--outline btn--sm">
-            Join community
-            <ArrowRight :size="15" />
-          </RouterLink>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================================================
-         QUICK INTENT
+         WHAT ARE YOU LOOKING FOR?
          ========================================================= -->
     <section class="intent-section">
       <div class="container">
-        <div class="section-heading section-heading--compact">
-          <div>
-            <span class="eyebrow">Explore</span>
-            <h2>What are you looking for?</h2>
-          </div>
+        <div class="section-heading">
+          <span class="eyebrow">Explore</span>
+
+          <h2>What are you looking for?</h2>
+
+          <p>
+            Start with what you want to do. We'll show the relevant
+            meetups from the community.
+          </p>
         </div>
 
         <div class="intent-grid">
@@ -198,171 +114,147 @@
             :key="intent.key"
             type="button"
             class="intent-card"
-            @click="setIntent(intent.key)"
+            :class="{ active: activeIntent === intent.key }"
+            @click="selectIntent(intent.key)"
           >
-            <component :is="intent.icon" :size="22" :stroke-width="1.7" />
+            <div class="intent-icon">
+              <component
+                :is="intent.icon"
+                :size="21"
+                :stroke-width="1.7"
+              />
+            </div>
 
-            <div>
+            <div class="intent-content">
               <strong>{{ intent.title }}</strong>
               <span>{{ intent.description }}</span>
             </div>
 
-            <ArrowUpRight :size="17" />
+            <ArrowUpRight :size="16" />
           </button>
         </div>
       </div>
     </section>
 
     <!-- =========================================================
-         RECENT MEETUPS
+         UPCOMING
          ========================================================= -->
-    <section class="meetup-section archive-section">
+    <section class="upcoming-section">
       <div class="container">
-        <div class="section-heading">
+        <div class="section-heading section-heading--row">
           <div>
-            <span class="eyebrow">Community history</span>
-            <h2>Meetups worth exploring</h2>
+            <span class="eyebrow">What's next</span>
+
+            <h2>Upcoming meetups</h2>
           </div>
 
-          <span class="result-count">
-            {{ filteredMeetups.length }}
-            {{ filteredMeetups.length === 1 ? 'result' : 'results' }}
+          <span
+            v-if="upcomingMeetups.length"
+            class="result-count"
+          >
+            {{ upcomingMeetups.length }}
+            {{ upcomingMeetups.length === 1 ? 'event' : 'events' }}
           </span>
         </div>
 
-        <div v-if="filteredMeetups.length" class="archive-list">
+        <div
+          v-if="upcomingMeetups.length"
+          class="upcoming-grid"
+        >
           <article
-            v-for="meetup in visibleMeetups"
+            v-for="meetup in upcomingMeetups"
             :key="meetup.key"
-            class="archive-card"
+            class="upcoming-card"
           >
-            <div class="archive-date" v-if="meetup.date">
-              <span>{{ meetup.dateDay }}</span>
-              <small>{{ meetup.dateMonth }}</small>
+            <div class="upcoming-card-top">
+              <span class="city-label">
+                {{ meetup.city }}
+              </span>
+
+              <span class="upcoming-label">
+                <span></span>
+                Upcoming
+              </span>
             </div>
 
-            <div class="archive-main">
-              <div class="archive-topline">
-                <span>{{ meetup.city }}</span>
+            <h3>{{ meetup.title }}</h3>
 
-                <span v-if="meetup.meetupNumber">
-                  {{ meetup.meetupNumber }}
-                </span>
-              </div>
+            <p v-if="meetup.about">
+              {{ meetup.about }}
+            </p>
 
-              <h3>{{ meetup.title }}</h3>
+            <div class="meetup-meta">
+              <span v-if="meetup.date">
+                <CalendarDays :size="15" />
+                {{ meetup.date }}
+              </span>
 
-              <p v-if="meetup.about">
-                {{ meetup.about }}
-              </p>
+              <span v-if="meetup.time">
+                <Clock3 :size="15" />
+                {{ meetup.time }}
+              </span>
 
-              <div class="archive-meta">
-                <span v-if="meetup.location">
-                  <MapPin :size="14" />
-                  {{ meetup.location }}
-                </span>
-
-                <span v-if="meetup.attended">
-                  <Users :size="14" />
-                  {{ meetup.attended }} attended
-                </span>
-
-                <span v-if="meetup.tags.length">
-                  <Tag :size="14" />
-                  {{ meetup.tags.slice(0, 2).join(' · ') }}
-                </span>
-              </div>
+              <span v-if="meetup.location">
+                <MapPin :size="15" />
+                {{ meetup.location }}
+              </span>
             </div>
 
-            <a
-              v-if="meetup.externalUrl"
-              :href="meetup.externalUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="archive-link"
-              aria-label="View meetup post"
-            >
-              <ExternalLink :size="17" />
-            </a>
+            <div class="upcoming-footer">
+              <RouterLink
+                :to="`/meetups/${meetup.slug}`"
+                class="btn btn--primary btn--sm"
+              >
+                Explore
+                <ArrowRight :size="15" />
+              </RouterLink>
+
+              <a
+                v-if="meetup.externalUrl"
+                :href="meetup.externalUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="event-link"
+              >
+                Event details
+                <ExternalLink :size="13" />
+              </a>
+            </div>
           </article>
         </div>
 
-        <div v-else class="empty-state empty-state--small">
-          <SearchX :size="22" />
+        <!-- Don't waste space if there are no upcoming events -->
+        <div
+          v-else
+          class="no-upcoming"
+        >
+          <CalendarDays :size="19" />
 
-          <div>
-            <h3>No meetups match your search</h3>
-            <p>Try another city, venue, topic or search term.</p>
-          </div>
+          <span>
+            No upcoming meetups are published yet.
+          </span>
 
           <button
             type="button"
-            class="btn btn--outline btn--sm"
-            @click="resetFilters"
+            @click="showPastMeetups = true"
           >
-            Clear filters
+            Explore past meetups
+            <ArrowRight :size="14" />
           </button>
         </div>
-
-        <button
-          v-if="filteredMeetups.length > visibleLimit"
-          type="button"
-          class="load-more"
-          @click="visibleLimit += 6"
-        >
-          Show more
-          <ChevronDown :size="16" />
-        </button>
       </div>
     </section>
 
     <!-- =========================================================
-         CITIES
+         SUGGEST
          ========================================================= -->
-    <section class="cities-section">
+    <section class="suggest-section">
       <div class="container">
-        <div class="section-heading">
+        <div class="suggest-card">
           <div>
-            <span class="eyebrow">Find your chapter</span>
-            <h2>Explore by city</h2>
-          </div>
-        </div>
-
-        <div class="cities-grid">
-          <RouterLink
-            v-for="city in visibleCities"
-            :key="city.key"
-            :to="`/meetups/${city.slug}`"
-            class="city-card"
-          >
-            <div class="city-icon">
-              <MapPin :size="18" />
-            </div>
-
-            <div class="city-content">
-              <h3>{{ city.name }}</h3>
-
-              <p>
-                {{ city.meetups }}
-                {{ city.meetups === 1 ? 'meetup' : 'meetups' }}
-                recorded
-              </p>
-            </div>
-
-            <ArrowUpRight :size="17" />
-          </RouterLink>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================================================
-         HOST CTA
-         ========================================================= -->
-    <section class="host-section">
-      <div class="container">
-        <div class="host-card">
-          <div>
-            <span class="eyebrow">Make the next one happen</span>
+            <span class="eyebrow">
+              Make the community bigger
+            </span>
 
             <h2>
               Don't see a meetup
@@ -370,8 +262,7 @@
             </h2>
 
             <p>
-              Suggest a city, organise a small gathering, or volunteer to help
-              the Sundarbans community grow offline.
+              Suggest a city, gathering or idea for the community.
             </p>
           </div>
 
@@ -387,36 +278,144 @@
         </div>
       </div>
     </section>
+
+    <!-- =========================================================
+         OPTIONAL PAST MEETUPS
+         Hidden by default.
+         ========================================================= -->
+    <Transition name="expand">
+      <section
+        v-if="showPastMeetups"
+        class="past-section"
+      >
+        <div class="container">
+          <div class="section-heading section-heading--row">
+            <div>
+              <span class="eyebrow">Community history</span>
+
+              <h2>Past meetups</h2>
+            </div>
+
+            <button
+              type="button"
+              class="close-history"
+              @click="showPastMeetups = false"
+            >
+              Hide
+              <X :size="15" />
+            </button>
+          </div>
+
+          <div
+            v-if="filteredMeetups.length"
+            class="past-list"
+          >
+            <article
+              v-for="meetup in visiblePastMeetups"
+              :key="meetup.key"
+              class="past-card"
+            >
+              <div
+                v-if="meetup.date"
+                class="past-date"
+              >
+                <strong>{{ meetup.dateDay }}</strong>
+                <span>{{ meetup.dateMonth }}</span>
+              </div>
+
+              <div class="past-main">
+                <span class="past-city">
+                  {{ meetup.city }}
+                </span>
+
+                <h3>{{ meetup.title }}</h3>
+
+                <p v-if="meetup.about">
+                  {{ meetup.about }}
+                </p>
+
+                <div class="past-meta">
+                  <span v-if="meetup.location">
+                    <MapPin :size="13" />
+                    {{ meetup.location }}
+                  </span>
+
+                  <span v-if="meetup.attended">
+                    <Users :size="13" />
+                    {{ meetup.attended }} attended
+                  </span>
+                </div>
+              </div>
+
+              <a
+                v-if="meetup.externalUrl"
+                :href="meetup.externalUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="past-link"
+                aria-label="View meetup"
+              >
+                <ExternalLink :size="16" />
+              </a>
+            </article>
+          </div>
+
+          <div
+            v-else
+            class="empty-history"
+          >
+            <SearchX :size="20" />
+
+            <span>
+              No meetups match your current search.
+            </span>
+
+            <button
+              type="button"
+              @click="resetSearch"
+            >
+              Clear search
+            </button>
+          </div>
+        </div>
+      </section>
+    </Transition>
   </main>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue';
+
 import {
   ArrowRight,
   ArrowUpRight,
+  BookOpen,
   CalendarDays,
-  ChevronDown,
   Clock3,
+  Code2,
+  Coffee,
   ExternalLink,
   MapPin,
   Search,
   SearchX,
-  Tag,
   Users,
-  X,
-  BookOpen,
-  Code2,
-  Coffee,
   UsersRound,
+  X,
 } from 'lucide-vue-next';
 
 import { regionConfigs } from './meetups/regionConfigs.js';
 
 /* ============================================================
-   REGION METADATA
+   STATE
+   ============================================================ */
 
-   Keep the URL slugs exactly aligned with RegionMeetupsView.vue.
+const searchQuery = ref('');
+const selectedCity = ref('');
+const activeIntent = ref('');
+const showPastMeetups = ref(false);
+
+/* ============================================================
+   CITIES
    ============================================================ */
 
 const cities = [
@@ -451,11 +450,6 @@ const cities = [
     name: 'Kolkata',
   },
   {
-    key: 'lucknow',
-    slug: 'lucknow',
-    name: 'Lucknow',
-  },
-  {
     key: 'mumbai',
     slug: 'mumbai',
     name: 'Mumbai',
@@ -468,51 +462,61 @@ const cities = [
 ];
 
 /* ============================================================
-   STATE
-   ============================================================ */
-
-const searchQuery = ref('');
-const activeFilter = ref('all');
-const visibleLimit = ref(6);
-
-const filters = [
-  { key: 'all', label: 'All meetups' },
-  { key: 'recent', label: 'Recent' },
-  { key: 'attendance', label: 'Most attended' },
-  { key: 'photos', label: 'With photos' },
-];
-
-/* ============================================================
-   INTENT CARDS
-
-   These are discovery shortcuts, not fake event categories.
-   They search the actual meetup metadata.
+   INTENTS
    ============================================================ */
 
 const intents = [
   {
     key: 'learn',
     title: 'Learn',
-    description: 'Study sessions, talks and knowledge sharing',
+    description: 'Study, talks and knowledge sharing',
     icon: BookOpen,
+    terms: [
+      'learn',
+      'study',
+      'academic',
+      'education',
+      'talk',
+      'session',
+    ],
   },
+
   {
     key: 'build',
     title: 'Build',
-    description: 'Projects, technology and collaboration',
+    description: 'Technology, projects and collaboration',
     icon: Code2,
+    terms: [
+      'tech',
+      'technology',
+      'project',
+      'coding',
+      'developer',
+      'hack',
+    ],
   },
+
   {
     key: 'social',
     title: 'Meet people',
-    description: 'Casual gatherings and community time',
+    description: 'Hangouts, conversations and community',
     icon: Coffee,
+    terms: [
+      'social',
+      'hangout',
+      'casual',
+      'coffee',
+      'fun',
+      'meet',
+    ],
   },
+
   {
     key: 'community',
-    title: 'Find your people',
-    description: 'Explore your city chapter',
+    title: 'Community',
+    description: 'Find your city chapter',
     icon: UsersRound,
+    terms: [],
   },
 ];
 
@@ -520,23 +524,24 @@ const intents = [
    HELPERS
    ============================================================ */
 
-function parseDate(value) {
-  if (!value) return null;
-
-  const parsed = new Date(value);
-
-  if (!Number.isNaN(parsed.getTime())) {
-    return parsed;
-  }
-
-  return null;
-}
-
 function normalize(value) {
   return String(value ?? '')
     .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w\s-]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function parseDate(value) {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime())
+    ? null
+    : date;
 }
 
 function makeDateParts(value) {
@@ -560,12 +565,43 @@ function makeDateParts(value) {
   };
 }
 
-/* ============================================================
-   NORMALIZE THE EXISTING REGION CONFIG DATA
+/*
+ * Flexible search:
+ *
+ * "bangalore"
+ * "bang"
+ * "tech"
+ * "cafe bangalore"
+ * "meetup patna"
+ *
+ * Every individual word only has to appear somewhere in the
+ * searchable event information.
+ */
+function matchesFlexibleSearch(meetup, query) {
+  if (!query) return true;
 
-   regionConfigs already handles the different source schemas
-   (Bangalore, Delhi, Patna, etc.), so the landing page consumes
-   its normalized shape instead of knowing about raw CSV columns.
+  const searchableText = normalize(
+    [
+      meetup.title,
+      meetup.city,
+      meetup.location,
+      meetup.about,
+      meetup.meetupNumber,
+      ...(meetup.tags || []),
+    ].join(' ')
+  );
+
+  const words = normalize(query)
+    .split(' ')
+    .filter(Boolean);
+
+  return words.every((word) => {
+    return searchableText.includes(word);
+  });
+}
+
+/* ============================================================
+   ALL HISTORICAL MEETUPS
    ============================================================ */
 
 const allMeetups = computed(() => {
@@ -576,18 +612,21 @@ const allMeetups = computed(() => {
 
     if (!config) return;
 
-    const past = Array.isArray(config.pastMeetups)
+    const meetups = Array.isArray(config.pastMeetups)
       ? config.pastMeetups
       : [];
 
-    past.forEach((meetup) => {
+    meetups.forEach((meetup, index) => {
       const date = parseDate(meetup.date);
       const dateParts = makeDateParts(meetup.date);
 
       records.push({
         ...meetup,
 
-        key: `${city.key}-${meetup.id}`,
+        key:
+          meetup.id ??
+          `${city.key}-${index}`,
+
         city: city.name,
         cityKey: city.key,
         slug: city.slug,
@@ -598,7 +637,13 @@ const allMeetups = computed(() => {
 
         about:
           meetup.about ||
-          'Meetup details are available in the chapter archive.',
+          '',
+
+        location:
+          meetup.location ||
+          meetup.venue ||
+          meetup.address1 ||
+          '',
 
         tags: Array.isArray(meetup.tags)
           ? meetup.tags.filter(Boolean)
@@ -609,7 +654,10 @@ const allMeetups = computed(() => {
         dateDay: dateParts.day,
         dateMonth: dateParts.month,
 
-        externalUrl: meetup.instaUrl || null,
+        externalUrl:
+          meetup.instaUrl ||
+          meetup.url ||
+          null,
       });
     });
   });
@@ -618,18 +666,91 @@ const allMeetups = computed(() => {
 });
 
 /* ============================================================
-   UPCOMING
+   FLEXIBLE SEARCH + CITY + INTENT
+   ============================================================ */
 
-   The current regionConfigs schema exposes `upcoming` separately.
-   This also checks historical records defensively in case a future
-   dated record exists in the imported data.
+const filteredMeetups = computed(() => {
+  let results = [...allMeetups.value];
+
+  /*
+   * City filter
+   */
+  if (selectedCity.value) {
+    results = results.filter(
+      (meetup) =>
+        meetup.cityKey === selectedCity.value
+    );
+  }
+
+  /*
+   * Search
+   */
+  if (searchQuery.value.trim()) {
+    results = results.filter((meetup) =>
+      matchesFlexibleSearch(
+        meetup,
+        searchQuery.value
+      )
+    );
+  }
+
+  /*
+   * Intent
+   */
+  if (activeIntent.value) {
+    const intent = intents.find(
+      (item) =>
+        item.key === activeIntent.value
+    );
+
+    if (intent?.terms?.length) {
+      results = results.filter((meetup) => {
+        const searchableText = normalize(
+          [
+            meetup.title,
+            meetup.about,
+            meetup.location,
+            ...(meetup.tags || []),
+          ].join(' ')
+        );
+
+        return intent.terms.some((term) =>
+          searchableText.includes(
+            normalize(term)
+          )
+        );
+      });
+    }
+  }
+
+  /*
+   * Newest first
+   */
+  results.sort((a, b) => {
+    const aDate =
+      a.dateObject?.getTime() ??
+      -Infinity;
+
+    const bDate =
+      b.dateObject?.getTime() ??
+      -Infinity;
+
+    return bDate - aDate;
+  });
+
+  return results;
+});
+
+/* ============================================================
+   UPCOMING
    ============================================================ */
 
 const upcomingMeetups = computed(() => {
   const now = new Date();
+
   now.setHours(0, 0, 0, 0);
 
-  const upcoming = [];
+  const results = [];
 
   cities.forEach((city) => {
     const config = regionConfigs[city.key];
@@ -637,191 +758,118 @@ const upcomingMeetups = computed(() => {
     if (!config?.upcoming) return;
 
     const event = config.upcoming;
+
     const date = parseDate(event.date);
 
+    /*
+     * Do not show stale upcoming records.
+     */
     if (date && date < now) return;
 
-    upcoming.push({
+    results.push({
       ...event,
+
       key: `${city.key}-upcoming`,
+
       city: city.name,
       cityKey: city.key,
       slug: city.slug,
-      title: event.name || `${city.name} Meetup`,
-      location: event.venue || event.address1 || null,
-      about: event.about || null,
-      externalUrl: event.instaUrl || null,
-      time: event.time || null,
+
+      title:
+        event.title ||
+        event.name ||
+        `${city.name} Meetup`,
+
+      about:
+        event.about ||
+        '',
+
+      location:
+        event.location ||
+        event.venue ||
+        event.address1 ||
+        '',
+
+      externalUrl:
+        event.instaUrl ||
+        event.url ||
+        null,
     });
   });
 
-  return upcoming.sort((a, b) => {
-    const aDate = parseDate(a.date)?.getTime() ?? Infinity;
-    const bDate = parseDate(b.date)?.getTime() ?? Infinity;
+  return results.sort((a, b) => {
+    const aDate =
+      parseDate(a.date)?.getTime() ??
+      Infinity;
+
+    const bDate =
+      parseDate(b.date)?.getTime() ??
+      Infinity;
 
     return aDate - bDate;
   });
 });
 
 /* ============================================================
-   SEARCH + FILTER
+   ONLY SHOW PAST MEETUPS WHEN USER REQUESTS THEM
    ============================================================ */
 
-const filteredMeetups = computed(() => {
-  const query = normalize(searchQuery.value);
-
-  let result = [...allMeetups.value];
-
-  if (query) {
-    result = result.filter((meetup) => {
-      const haystack = normalize(
-        [
-          meetup.title,
-          meetup.city,
-          meetup.location,
-          meetup.about,
-          meetup.meetupNumber,
-          ...(meetup.tags || []),
-        ].join(' ')
-      );
-
-      return haystack.includes(query);
-    });
-  }
-
-  if (activeFilter.value === 'recent') {
-    result = result.filter((meetup) => meetup.dateObject);
-  }
-
-  if (activeFilter.value === 'attendance') {
-    result = result
-      .filter((meetup) => meetup.attended)
-      .sort(
-        (a, b) =>
-          Number(b.attended || 0) -
-          Number(a.attended || 0)
-      );
-  }
-
-  if (activeFilter.value === 'photos') {
-    result = result.filter(
-      (meetup) =>
-        Array.isArray(meetup.photos) &&
-        meetup.photos.length > 0
-    );
-  }
-
-  if (
-    activeFilter.value === 'recent' ||
-    activeFilter.value === 'all'
-  ) {
-    result.sort((a, b) => {
-      const aDate = a.dateObject?.getTime() ?? -Infinity;
-      const bDate = b.dateObject?.getTime() ?? -Infinity;
-
-      return bDate - aDate;
-    });
-  }
-
-  return result;
-});
-
-const visibleMeetups = computed(() =>
-  filteredMeetups.value.slice(0, visibleLimit.value)
-);
-
-/* ============================================================
-   CITY DATA
-   ============================================================ */
-
-const visibleCities = computed(() => {
-  const query = normalize(searchQuery.value);
-
-  return cities
-    .map((city) => {
-      const config = regionConfigs[city.key];
-
-      return {
-        ...city,
-        meetups: config?.pastMeetups?.length ?? 0,
-      };
-    })
-    .filter((city) => {
-      if (!query) return true;
-
-      return normalize(city.name).includes(query);
-    })
-    .sort((a, b) => b.meetups - a.meetups);
+const visiblePastMeetups = computed(() => {
+  return filteredMeetups.value.slice(0, 12);
 });
 
 /* ============================================================
-   GLOBAL STATS
-
-   "Attendance" is deliberately labelled as recorded attendance,
-   because the source data represents meetup attendance rather
-   than unique members.
+   ACTIONS
    ============================================================ */
 
-const stats = computed(() => {
-  const records = allMeetups.value;
+function selectCity(city) {
+  selectedCity.value =
+    selectedCity.value === city
+      ? ''
+      : city;
 
-  return {
-    meetups: records.length,
-
-    cities: cities.filter(
-      (city) =>
-        (regionConfigs[city.key]?.pastMeetups?.length ?? 0) > 0
-    ).length,
-
-    attendance: records.reduce(
-      (sum, meetup) =>
-        sum + Number(meetup.attended || 0),
-      0
-    ),
-  };
-});
-
-/* ============================================================
-   INTENT ACTIONS
-   ============================================================ */
-
-function setIntent(intent) {
-  activeFilter.value = 'all';
-
-  const mappings = {
-    learn: ['learn', 'study', 'academic', 'session', 'talk'],
-    build: ['tech', 'technology', 'project', 'coding', 'developer'],
-    social: ['social', 'hangout', 'casual', 'fun'],
-    community: [],
-  };
-
-  const terms = mappings[intent] || [];
-
-  if (!terms.length) {
-    searchQuery.value = '';
-    document
-      .querySelector('.cities-section')
-      ?.scrollIntoView({ behavior: 'smooth' });
-
-    return;
-  }
-
-  /*
-   * Search against the actual imported data.
-   * We use a broad term because the historical records do not
-   * share one universal event-type field.
-   */
-  searchQuery.value = terms[0];
-
-  document
-    .querySelector('.archive-section')
-    ?.scrollIntoView({ behavior: 'smooth' });
+  showPastMeetups.value = false;
 }
 
-function resetFilters() {
+function selectIntent(intent) {
+  activeIntent.value =
+    activeIntent.value === intent
+      ? ''
+      : intent;
+
+  /*
+   * If the user is looking for something,
+   * don't suddenly dump the archive onto the page.
+   *
+   * Only reveal it if there are matching results.
+   */
+  if (
+    activeIntent.value &&
+    filteredMeetups.value.length
+  ) {
+    showPastMeetups.value = true;
+
+    requestAnimationFrame(() => {
+      document
+        .querySelector('.past-section')
+        ?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+    });
+  } else {
+    showPastMeetups.value = false;
+  }
+}
+
+function clearSearch() {
   searchQuery.value = '';
-  activeFilter.value = 'all';
-  visibleLimit.value = 6;
+}
+
+function resetSearch() {
+  searchQuery.value = '';
+  selectedCity.value = '';
+  activeIntent.value = '';
 }
 </script>
 
@@ -840,126 +888,90 @@ function resetFilters() {
    ============================================================ */
 
 .meetups-intro {
-  padding: clamp(7rem, 12vw, 9rem) 0 3rem;
+  padding: clamp(7rem, 12vw, 9rem) 0 2.5rem;
   border-bottom: 1px solid var(--border);
 }
 
-.intro-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
-  gap: 4rem;
-  align-items: end;
+.intro-content {
+  max-width: 850px;
 }
 
 .eyebrow {
   display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
   color: var(--accent);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
 }
 
-.meetups-intro h1 {
-  max-width: 800px;
+.intro-content h1 {
   margin-top: 0.7rem;
   font-family: var(--font-display);
-  font-size: clamp(3rem, 7vw, 6.5rem);
+  font-size: clamp(3rem, 7vw, 6.2rem);
   line-height: 0.95;
   letter-spacing: -0.045em;
-  color: var(--text);
 }
 
-.meetups-intro h1 span {
+.intro-content h1 span {
   color: var(--accent);
 }
 
-.intro-copy {
+.intro-content p {
   max-width: 650px;
-  margin-top: 1.5rem;
+  margin-top: 1.4rem;
   color: var(--text2);
-  font-size: 1rem;
+  font-size: 0.95rem;
   line-height: 1.75;
 }
 
-.intro-stats {
-  display: grid;
-  grid-template-columns: 1fr;
-  border-left: 1px solid var(--border);
-}
-
-.intro-stat {
-  display: flex;
-  flex-direction: column;
-  padding: 0.9rem 0 0.9rem 1.5rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.intro-stat:last-child {
-  border-bottom: 0;
-}
-
-.intro-stat strong {
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  color: var(--text);
-}
-
-.intro-stat span {
-  color: var(--text2);
-  font-size: 0.76rem;
-}
-
 /* ============================================================
-   DISCOVERY
+   SEARCH
    ============================================================ */
 
-.discovery-panel {
-  margin-top: 3rem;
-  padding: 0.65rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--rad2);
-}
-
-.search-box {
+.search-wrapper {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  min-height: 56px;
-  padding: 0 1rem;
+  margin-top: 2.3rem;
+  min-height: 62px;
+  padding: 0 1.15rem;
   color: var(--text2);
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--rad);
+  border-radius: var(--rad2);
+  box-shadow: var(--shadow-sm);
 }
 
-.search-box:focus-within {
+.search-wrapper:focus-within {
   border-color: var(--border-gold);
 }
 
-.search-box input {
+.search-wrapper input {
   width: 100%;
   min-width: 0;
   border: 0;
   outline: 0;
-  background: transparent;
   color: var(--text);
+  background: transparent;
   font-family: var(--font-body);
-  font-size: 0.92rem;
+  font-size: 0.9rem;
 }
 
-.search-box input::placeholder {
+.search-wrapper input::placeholder {
   color: var(--text3);
+}
+
+.search-result-count {
+  color: var(--accent);
+  font-size: 0.72rem;
 }
 
 .clear-search {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   flex: none;
   border: 0;
   border-radius: 50%;
@@ -973,241 +985,140 @@ function resetFilters() {
   background: var(--surface2);
 }
 
-.filters {
+/* ============================================================
+   CITY SELECTOR
+   ============================================================ */
+
+.city-selector {
+  margin-top: 1.1rem;
+}
+
+.city-selector-header {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.75rem 0.35rem 0.2rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+}
+
+.city-selector-header > span {
+  color: var(--text3);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.city-selector-header button {
+  padding: 0;
+  border: 0;
+  color: var(--accent);
+  background: transparent;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.city-list {
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding-bottom: 0.3rem;
+  scrollbar-width: none;
+}
+
+.city-list::-webkit-scrollbar {
+  display: none;
+}
+
+.city-pill {
+  flex: none;
+  padding: 0.58rem 0.9rem;
+  color: var(--text2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.city-pill:hover {
+  color: var(--text);
+  border-color: var(--border-card-hover);
+}
+
+.city-pill.active {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 /* ============================================================
-   SECTIONS
+   SECTION
    ============================================================ */
 
-.meetup-section,
 .intent-section,
-.cities-section,
-.host-section {
-  padding: clamp(4.5rem, 8vw, 7rem) 0;
-}
-
-.upcoming-section {
-  background: var(--bg);
+.upcoming-section,
+.suggest-section,
+.past-section {
+  padding: clamp(4rem, 7vw, 6rem) 0;
 }
 
 .intent-section,
-.cities-section {
+.past-section {
   background: var(--bg2);
 }
 
 .section-heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 2rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.8rem;
 }
 
-.section-heading--compact {
-  margin-bottom: 1.5rem;
+.section-heading--row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .section-heading h2 {
-  margin-top: 0.35rem;
+  margin-top: 0.4rem;
   font-family: var(--font-display);
-  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  font-size: clamp(1.9rem, 4vw, 3rem);
   line-height: 1.05;
-  color: var(--text);
 }
 
-.result-count {
-  flex: none;
-  color: var(--text3);
-  font-size: 0.78rem;
-}
-
-/* ============================================================
-   UPCOMING CARDS
-   ============================================================ */
-
-.events-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.event-card {
-  display: flex;
-  flex-direction: column;
-  min-height: 300px;
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--rad2);
-  transition:
-    border-color 0.3s ease,
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-}
-
-.event-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--border-card-hover);
-  box-shadow: var(--shadow-md);
-}
-
-.event-status {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.8rem 1.3rem;
-  border-bottom: 1px solid var(--border);
-  color: var(--accent);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-.event-card-body {
-  flex: 1;
-  padding: 1.5rem;
-}
-
-.event-city {
-  color: var(--accent);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.event-card h3 {
-  margin-top: 0.55rem;
-  font-family: var(--font-display);
-  font-size: 1.55rem;
-  line-height: 1.15;
-}
-
-.event-card-body p {
-  margin-top: 0.8rem;
-  color: var(--text2);
-  font-size: 0.86rem;
-  line-height: 1.65;
-}
-
-.event-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: 1.2rem;
-}
-
-.event-details span,
-.archive-meta span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--text2);
-  font-size: 0.74rem;
-}
-
-.event-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.3rem;
-  border-top: 1px solid var(--border);
-}
-
-.external-link,
-.archive-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--text2);
-  font-size: 0.73rem;
-  text-decoration: none;
-}
-
-.external-link:hover,
-.archive-link:hover {
-  color: var(--accent);
-}
-
-/* ============================================================
-   EMPTY STATES
-   ============================================================ */
-
-.empty-state {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  padding: 1.5rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--rad2);
-}
-
-.empty-icon {
-  display: grid;
-  place-items: center;
-  width: 46px;
-  height: 46px;
-  flex: none;
-  color: var(--accent);
-  background: rgba(213, 166, 58, 0.08);
-  border: 1px solid var(--border-gold);
-  border-radius: var(--rad);
-}
-
-.empty-state h3 {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-}
-
-.empty-state p {
-  max-width: 700px;
-  margin-top: 0.25rem;
+.section-heading p {
+  max-width: 600px;
+  margin-top: 0.6rem;
   color: var(--text2);
   font-size: 0.8rem;
   line-height: 1.6;
 }
 
-.empty-state .btn {
-  margin-left: auto;
-  flex: none;
-}
-
-.empty-state--small {
-  color: var(--text2);
+.result-count {
+  color: var(--text3);
+  font-size: 0.75rem;
 }
 
 /* ============================================================
-   INTENT
+   INTENTS
    ============================================================ */
 
 .intent-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.8rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.7rem;
 }
 
 .intent-card {
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 0.9rem;
-  min-height: 150px;
-  padding: 1.25rem;
+  gap: 0.8rem;
+  min-height: 145px;
+  padding: 1.15rem;
   text-align: left;
   color: var(--text);
   background: var(--surface);
@@ -1215,297 +1126,401 @@ function resetFilters() {
   border-radius: var(--rad2);
   cursor: pointer;
   transition:
-    transform 0.3s ease,
-    border-color 0.3s ease,
-    background 0.3s ease;
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease;
 }
 
-.intent-card > svg:first-child {
-  flex: none;
-  color: var(--accent);
-}
-
-.intent-card > svg:last-child {
-  position: absolute;
-  top: 1.25rem;
-  right: 1.25rem;
-  color: var(--text3);
-}
-
-.intent-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--border-card-hover);
+.intent-card:hover,
+.intent-card.active {
+  transform: translateY(-2px);
+  border-color: var(--border-gold);
   background: var(--surface2);
 }
 
-.intent-card strong {
+.intent-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  color: var(--accent);
+  background: rgba(213, 166, 58, 0.08);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--rad);
+}
+
+.intent-content {
+  padding-right: 0.7rem;
+}
+
+.intent-content strong {
   display: block;
-  padding-right: 1rem;
   font-family: var(--font-display);
   font-size: 1rem;
 }
 
-.intent-card span {
+.intent-content span {
   display: block;
-  margin-top: 0.4rem;
+  margin-top: 0.35rem;
   color: var(--text2);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   line-height: 1.5;
 }
 
-/* ============================================================
-   ARCHIVE
-   ============================================================ */
-
-.archive-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
+.intent-card > svg:last-child {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: var(--text3);
 }
 
-.archive-card {
+/* ============================================================
+   UPCOMING
+   ============================================================ */
+
+.upcoming-grid {
   display: grid;
-  grid-template-columns: 75px minmax(0, 1fr) auto;
-  gap: 1.2rem;
-  align-items: center;
-  padding: 1.15rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.8rem;
+}
+
+.upcoming-card {
+  padding: 1.4rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--rad2);
   transition:
-    border-color 0.3s ease,
-    background 0.3s ease;
+    transform 0.25s ease,
+    border-color 0.25s ease;
 }
 
-.archive-card:hover {
+.upcoming-card:hover {
+  transform: translateY(-2px);
   border-color: var(--border-card-hover);
-  background: var(--surface2);
 }
 
-.archive-date {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 68px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--rad);
-}
-
-.archive-date span {
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  color: var(--text);
-}
-
-.archive-date small {
-  color: var(--accent);
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.archive-topline {
+.upcoming-card-top {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.city-label {
   color: var(--accent);
-  font-size: 0.68rem;
+  font-size: 0.67rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.archive-topline span + span {
-  color: var(--text3);
-}
-
-.archive-main h3 {
-  margin-top: 0.25rem;
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  line-height: 1.25;
-}
-
-.archive-main p {
-  max-width: 800px;
-  margin-top: 0.35rem;
-  overflow: hidden;
-  color: var(--text2);
-  font-size: 0.76rem;
-  line-height: 1.55;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.archive-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.8rem 1.2rem;
-  margin-top: 0.55rem;
-}
-
-.archive-link {
-  width: 38px;
-  height: 38px;
-  justify-content: center;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-}
-
-.load-more {
+.upcoming-label {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  margin: 1.5rem auto 0;
-  padding: 0.7rem 1.1rem;
-  color: var(--accent);
-  background: transparent;
-  border: 1px solid var(--border-gold);
-  border-radius: var(--rad);
-  cursor: pointer;
+  gap: 0.35rem;
+  color: var(--text3);
+  font-size: 0.65rem;
 }
 
-/* ============================================================
-   CITIES
-   ============================================================ */
-
-.cities-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.7rem;
+.upcoming-label span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
 }
 
-.city-card {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  padding: 1rem;
-  color: var(--text);
-  text-decoration: none;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--rad2);
-  transition:
-    transform 0.3s ease,
-    border-color 0.3s ease;
-}
-
-.city-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-card-hover);
-}
-
-.city-icon {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  flex: none;
-  color: var(--accent);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--rad);
-}
-
-.city-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.city-content h3 {
+.upcoming-card h3 {
+  margin-top: 0.65rem;
   font-family: var(--font-display);
-  font-size: 0.98rem;
+  font-size: 1.4rem;
 }
 
-.city-content p {
-  margin-top: 0.1rem;
+.upcoming-card > p {
+  margin-top: 0.55rem;
+  color: var(--text2);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.meetup-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem 1rem;
+  margin-top: 1rem;
+}
+
+.meetup-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   color: var(--text2);
   font-size: 0.7rem;
 }
 
-/* ============================================================
-   HOST CTA
-   ============================================================ */
-
-.host-section {
-  padding-top: 3rem;
-  padding-bottom: 6rem;
-}
-
-.host-card {
+.upcoming-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 3rem;
-  padding: clamp(2rem, 5vw, 4rem);
+  gap: 1rem;
+  margin-top: 1.3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.event-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text2);
+  font-size: 0.7rem;
+  text-decoration: none;
+}
+
+.event-link:hover {
+  color: var(--accent);
+}
+
+/* ============================================================
+   NO UPCOMING
+   ============================================================ */
+
+.no-upcoming {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 1.2rem;
+  color: var(--text2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rad);
+}
+
+.no-upcoming > svg {
+  color: var(--accent);
+  flex: none;
+}
+
+.no-upcoming span {
+  flex: 1;
+  font-size: 0.76rem;
+}
+
+.no-upcoming button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: none;
+  padding: 0;
+  color: var(--accent);
+  border: 0;
+  background: transparent;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+/* ============================================================
+   SUGGEST
+   ============================================================ */
+
+.suggest-section {
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+}
+
+.suggest-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: clamp(2rem, 5vw, 3.5rem);
   background:
     linear-gradient(
       110deg,
       rgba(213, 166, 58, 0.08),
-      transparent 60%
+      transparent 65%
     ),
     var(--surface);
   border: 1px solid var(--border-gold);
   border-radius: var(--rad2);
 }
 
-.host-card h2 {
+.suggest-card h2 {
   max-width: 650px;
-  margin-top: 0.5rem;
+  margin-top: 0.45rem;
   font-family: var(--font-display);
-  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  font-size: clamp(1.8rem, 4vw, 3rem);
   line-height: 1.05;
 }
 
-.host-card h2 span {
+.suggest-card h2 span {
   color: var(--accent);
 }
 
-.host-card p {
-  max-width: 650px;
-  margin-top: 0.8rem;
+.suggest-card p {
+  margin-top: 0.65rem;
   color: var(--text2);
-  font-size: 0.86rem;
+  font-size: 0.8rem;
 }
 
-.host-card .btn {
+.suggest-card .btn {
   flex: none;
+}
+
+/* ============================================================
+   PAST MEETUPS
+   ============================================================ */
+
+.close-history {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.7rem;
+  color: var(--text2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rad);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.close-history:hover {
+  color: var(--text);
+  border-color: var(--border-card-hover);
+}
+
+.past-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.past-card {
+  display: grid;
+  grid-template-columns: 65px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rad2);
+}
+
+.past-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 62px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--rad);
+}
+
+.past-date strong {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+}
+
+.past-date span {
+  color: var(--accent);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+}
+
+.past-city {
+  color: var(--accent);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.past-main h3 {
+  margin-top: 0.2rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.past-main p {
+  margin-top: 0.3rem;
+  color: var(--text2);
+  font-size: 0.72rem;
+}
+
+.past-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 0.45rem;
+}
+
+.past-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--text3);
+  font-size: 0.67rem;
+}
+
+.past-link {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--text2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+
+.past-link:hover {
+  color: var(--accent);
+  border-color: var(--border-gold);
+}
+
+.empty-history {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 1rem;
+  color: var(--text2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rad);
+  font-size: 0.75rem;
+}
+
+.empty-history button {
+  margin-left: auto;
+  color: var(--accent);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* ============================================================
+   TRANSITION
+   ============================================================ */
+
+.expand-enter-active,
+.expand-leave-active {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  opacity: 0;
+  transform: translateY(-12px);
 }
 
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 
-@media (max-width: 1000px) {
-  .intro-grid {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-
-  .intro-stats {
-    grid-template-columns: repeat(3, 1fr);
-    border-left: 0;
-    border-top: 1px solid var(--border);
-  }
-
-  .intro-stat {
-    padding: 1rem;
-    border-bottom: 0;
-    border-right: 1px solid var(--border);
-  }
-
-  .intro-stat:last-child {
-    border-right: 0;
-  }
-
+@media (max-width: 950px) {
   .intent-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .cities-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -1515,91 +1530,49 @@ function resetFilters() {
     padding-top: 6rem;
   }
 
-  .meetups-intro h1 {
-    font-size: clamp(2.8rem, 15vw, 5rem);
-  }
-
-  .events-grid {
+  .upcoming-grid {
     grid-template-columns: 1fr;
   }
 
-  .section-heading {
+  .suggest-card {
     align-items: flex-start;
     flex-direction: column;
-    gap: 0.5rem;
   }
 
-  .empty-state {
-    align-items: flex-start;
-    flex-wrap: wrap;
+  .past-card {
+    grid-template-columns: 55px minmax(0, 1fr);
   }
 
-  .empty-state .btn {
-    margin-left: 0;
-  }
-
-  .archive-card {
-    grid-template-columns: 58px minmax(0, 1fr);
-  }
-
-  .archive-link {
+  .past-link {
     display: none;
-  }
-
-  .host-card {
-    flex-direction: column;
-    align-items: flex-start;
   }
 }
 
 @media (max-width: 560px) {
-  .meetups-intro {
-    padding-bottom: 2rem;
-  }
-
-  .intro-stats {
+  .intent-grid {
     grid-template-columns: 1fr;
   }
 
-  .intro-stat {
-    border-right: 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .intro-stat:last-child {
-    border-bottom: 0;
-  }
-
-  .filters {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 0.5rem;
-  }
-
-  .filters .sel {
-    flex: none;
-  }
-
-  .intent-grid,
-  .cities-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .archive-card {
-    grid-template-columns: 1fr;
-  }
-
-  .archive-date {
-    width: 58px;
-  }
-
-  .archive-main p {
-    -webkit-line-clamp: 3;
-  }
-
-  .event-footer {
+  .section-heading--row {
     align-items: flex-start;
     flex-direction: column;
   }
+
+  .no-upcoming {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .no-upcoming button {
+    margin-left: 1.7rem;
+  }
+
+  .past-card {
+    grid-template-columns: 1fr;
+  }
+
+  .past-date {
+    width: 55px;
+  }
 }
-</style>
+```
