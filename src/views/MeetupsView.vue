@@ -1,568 +1,1605 @@
 <template>
-  <div>
-    <PageHero
-      bg-image="https://img.freepik.com/free-vector/politician-sitting-round-table-boardroom-board-directors-with-ceo-holding-formal-talk-office-room-flat-vector-illustration-business-authority-corporate-leader-planning-strategy-concept_74855-22013.jpg?semt=ais_hybrid&w=740&q=80"
-      breadcrumb-title="Meetups"
-      title="City"
-      accent-title="Meetups"
-      subtitle="Find and connect with Sundarbans members in your city"
-    />
-
-    <section class="section rs" ref="gridSection">
+  <main class="meetups-page">
+    <!-- =========================================================
+         INTRO
+         ========================================================= -->
+    <section class="meetups-intro">
       <div class="container">
-        <div class="sec-hdr">
-          <div class="section-tag">Across India</div>
-          <h2 class="section-title-xl">Choose <span class="tg">your city</span></h2>
-        </div>
+        <div class="intro-grid">
+          <div>
+            <span class="eyebrow">Sundarbans House · Community</span>
 
-        <div class="regions-grid">
-          <div
-            v-for="region in regions"
-            :key="region.slug"
-            class="region-card reveal"
-            :class="{ featured: region.featured }"
-            @mouseenter="hoveredRegion = region.slug"
-            @mouseleave="hoveredRegion = null"
-            @click="goToRegion(region.slug)"
-          >
-            <img :src="region.image" :alt="region.name" class="region-bg" loading="lazy" />
-            <div class="region-overlay"></div>
-            <div class="region-gold-tint" v-if="hoveredRegion === region.slug"></div>
-            <div class="region-content">
-              <div class="region-top">
-                <span class="region-badge" v-if="region.badge">{{ region.badge }}</span>
-              </div>
-              <div class="region-bottom">
-                <h3 class="region-name">{{ region.name }}</h3>
-                <p class="region-members">{{ region.members }} members</p>
-              </div>
+            <h1>
+              Find your
+              <span>people.</span>
+            </h1>
+
+            <p class="intro-copy">
+              Discover meetups, connect with students in your city, and find
+              places to learn, collaborate and spend time together offline.
+            </p>
+          </div>
+
+          <div class="intro-stats">
+            <div class="intro-stat">
+              <strong>{{ stats.meetups }}</strong>
+              <span>meetups recorded</span>
+            </div>
+
+            <div class="intro-stat">
+              <strong>{{ stats.cities }}</strong>
+              <span>active cities</span>
+            </div>
+
+            <div class="intro-stat">
+              <strong>{{ stats.attendance }}</strong>
+              <span>recorded attendance</span>
             </div>
           </div>
         </div>
 
-        <div
-          style="
-            margin-top: 4rem;
-            text-align: center;
-            padding: 3rem 2rem;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--rad2);
-          "
-        >
-          <div
-            style="
-              color: var(--accent);
-              margin-bottom: 1rem;
-              display: flex;
-              justify-content: center;
-            "
-          >
-            <Globe2 :size="34" :stroke-width="1.5" />
+        <!-- =======================================================
+             DISCOVERY BAR
+             ======================================================= -->
+        <div class="discovery-panel">
+          <label class="search-box">
+            <Search :size="19" :stroke-width="1.8" />
+
+            <input
+              v-model="searchQuery"
+              type="search"
+              placeholder="Search meetups, cities, venues or topics..."
+              aria-label="Search meetups"
+            />
+
+            <button
+              v-if="searchQuery"
+              class="clear-search"
+              type="button"
+              aria-label="Clear search"
+              @click="searchQuery = ''"
+            >
+              <X :size="16" />
+            </button>
+          </label>
+
+          <div class="filters">
+            <button
+              v-for="filter in filters"
+              :key="filter.key"
+              type="button"
+              class="sel"
+              :aria-pressed="activeFilter === filter.key"
+              @click="activeFilter = filter.key"
+            >
+              {{ filter.label }}
+            </button>
           </div>
-          <h3
-            style="
-              font-family: var(--font-display);
-              font-size: 1.6rem;
-              margin-bottom: 1rem;
-              font-weight: 700;
-              color: var(--text);
-            "
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         UPCOMING
+         ========================================================= -->
+    <section class="meetup-section upcoming-section">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">What's next</span>
+            <h2>Upcoming meetups</h2>
+          </div>
+
+          <span class="result-count">
+            {{ upcomingMeetups.length }}
+            {{ upcomingMeetups.length === 1 ? 'event' : 'events' }}
+          </span>
+        </div>
+
+        <div v-if="upcomingMeetups.length" class="events-grid">
+          <article
+            v-for="meetup in upcomingMeetups"
+            :key="meetup.key"
+            class="event-card event-card--upcoming"
           >
-            Bring the Community to Your City
-          </h3>
-          <p
-            style="
-              color: var(--text2);
-              margin-bottom: 1.75rem;
-              max-width: 600px;
-              margin-left: auto;
-              margin-right: auto;
-              line-height: 1.6;
-            "
+            <div class="event-status">
+              <span class="status-dot"></span>
+              Upcoming
+            </div>
+
+            <div class="event-card-body">
+              <span class="event-city">{{ meetup.city }}</span>
+
+              <h3>{{ meetup.title }}</h3>
+
+              <p v-if="meetup.about">
+                {{ meetup.about }}
+              </p>
+
+              <div class="event-details">
+                <span v-if="meetup.date">
+                  <CalendarDays :size="15" />
+                  {{ meetup.date }}
+                </span>
+
+                <span v-if="meetup.time">
+                  <Clock3 :size="15" />
+                  {{ meetup.time }}
+                </span>
+
+                <span v-if="meetup.location">
+                  <MapPin :size="15" />
+                  {{ meetup.location }}
+                </span>
+              </div>
+            </div>
+
+            <div class="event-footer">
+              <RouterLink
+                :to="`/meetups/${meetup.slug}`"
+                class="btn btn--primary btn--sm"
+              >
+                Explore chapter
+                <ArrowRight :size="15" />
+              </RouterLink>
+
+              <a
+                v-if="meetup.externalUrl"
+                :href="meetup.externalUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="external-link"
+              >
+                Event link
+                <ExternalLink :size="13" />
+              </a>
+            </div>
+          </article>
+        </div>
+
+        <div v-else class="empty-state">
+          <div class="empty-icon">
+            <CalendarDays :size="23" />
+          </div>
+
+          <div>
+            <h3>No upcoming meetup published yet</h3>
+
+            <p>
+              There isn't a future meetup in the current community data.
+              Browse previous meetups below or open your city chapter to stay
+              connected.
+            </p>
+          </div>
+
+          <RouterLink to="/community" class="btn btn--outline btn--sm">
+            Join community
+            <ArrowRight :size="15" />
+          </RouterLink>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         QUICK INTENT
+         ========================================================= -->
+    <section class="intent-section">
+      <div class="container">
+        <div class="section-heading section-heading--compact">
+          <div>
+            <span class="eyebrow">Explore</span>
+            <h2>What are you looking for?</h2>
+          </div>
+        </div>
+
+        <div class="intent-grid">
+          <button
+            v-for="intent in intents"
+            :key="intent.key"
+            type="button"
+            class="intent-card"
+            @click="setIntent(intent.key)"
           >
-            Want a meetup in your city like Siliguri or Guwahati? Suggest a location, pitch an
-            activity, or volunteer as a host. Help us expand the Sundarbans family!
-          </p>
+            <component :is="intent.icon" :size="22" :stroke-width="1.7" />
+
+            <div>
+              <strong>{{ intent.title }}</strong>
+              <span>{{ intent.description }}</span>
+            </div>
+
+            <ArrowUpRight :size="17" />
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         RECENT MEETUPS
+         ========================================================= -->
+    <section class="meetup-section archive-section">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Community history</span>
+            <h2>Meetups worth exploring</h2>
+          </div>
+
+          <span class="result-count">
+            {{ filteredMeetups.length }}
+            {{ filteredMeetups.length === 1 ? 'result' : 'results' }}
+          </span>
+        </div>
+
+        <div v-if="filteredMeetups.length" class="archive-list">
+          <article
+            v-for="meetup in visibleMeetups"
+            :key="meetup.key"
+            class="archive-card"
+          >
+            <div class="archive-date" v-if="meetup.date">
+              <span>{{ meetup.dateDay }}</span>
+              <small>{{ meetup.dateMonth }}</small>
+            </div>
+
+            <div class="archive-main">
+              <div class="archive-topline">
+                <span>{{ meetup.city }}</span>
+
+                <span v-if="meetup.meetupNumber">
+                  {{ meetup.meetupNumber }}
+                </span>
+              </div>
+
+              <h3>{{ meetup.title }}</h3>
+
+              <p v-if="meetup.about">
+                {{ meetup.about }}
+              </p>
+
+              <div class="archive-meta">
+                <span v-if="meetup.location">
+                  <MapPin :size="14" />
+                  {{ meetup.location }}
+                </span>
+
+                <span v-if="meetup.attended">
+                  <Users :size="14" />
+                  {{ meetup.attended }} attended
+                </span>
+
+                <span v-if="meetup.tags.length">
+                  <Tag :size="14" />
+                  {{ meetup.tags.slice(0, 2).join(' · ') }}
+                </span>
+              </div>
+            </div>
+
+            <a
+              v-if="meetup.externalUrl"
+              :href="meetup.externalUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="archive-link"
+              aria-label="View meetup post"
+            >
+              <ExternalLink :size="17" />
+            </a>
+          </article>
+        </div>
+
+        <div v-else class="empty-state empty-state--small">
+          <SearchX :size="22" />
+
+          <div>
+            <h3>No meetups match your search</h3>
+            <p>Try another city, venue, topic or search term.</p>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn--outline btn--sm"
+            @click="resetFilters"
+          >
+            Clear filters
+          </button>
+        </div>
+
+        <button
+          v-if="filteredMeetups.length > visibleLimit"
+          type="button"
+          class="load-more"
+          @click="visibleLimit += 6"
+        >
+          Show more
+          <ChevronDown :size="16" />
+        </button>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         CITIES
+         ========================================================= -->
+    <section class="cities-section">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Find your chapter</span>
+            <h2>Explore by city</h2>
+          </div>
+        </div>
+
+        <div class="cities-grid">
+          <RouterLink
+            v-for="city in visibleCities"
+            :key="city.key"
+            :to="`/meetups/${city.slug}`"
+            class="city-card"
+          >
+            <div class="city-icon">
+              <MapPin :size="18" />
+            </div>
+
+            <div class="city-content">
+              <h3>{{ city.name }}</h3>
+
+              <p>
+                {{ city.meetups }}
+                {{ city.meetups === 1 ? 'meetup' : 'meetups' }}
+                recorded
+              </p>
+            </div>
+
+            <ArrowUpRight :size="17" />
+          </RouterLink>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         HOST CTA
+         ========================================================= -->
+    <section class="host-section">
+      <div class="container">
+        <div class="host-card">
+          <div>
+            <span class="eyebrow">Make the next one happen</span>
+
+            <h2>
+              Don't see a meetup
+              <span>near you?</span>
+            </h2>
+
+            <p>
+              Suggest a city, organise a small gathering, or volunteer to help
+              the Sundarbans community grow offline.
+            </p>
+          </div>
+
           <a
             href="https://forms.gle/iHeYQsAbsUTBHJJC6"
             target="_blank"
             rel="noopener noreferrer"
-            class="submit-btn"
-            style="display: inline-block; text-decoration: none"
+            class="btn btn--primary"
           >
-            Suggest Location or Volunteer
+            Suggest a meetup
+            <ArrowUpRight :size="17" />
           </a>
         </div>
       </div>
     </section>
-
-    <section class="section rs" style="background: var(--bg2)">
-      <div class="container">
-        <div class="sec-hdr">
-          <div class="section-tag">Hall of Fame</div>
-          <h2 class="section-title-xl">Regional Coordinator <span class="tg">Leaderboard</span></h2>
-          <p class="sec-sub">
-            Top Contributors and Most Active Regional Coordinators of Sundarbans House
-          </p>
-        </div>
-
-        <div class="card-base">
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              margin-bottom: 1.5rem;
-              flex-wrap: wrap;
-              gap: 0.75rem;
-            "
-          >
-            <div class="filter-tabs" style="margin: 0">
-              <div
-                class="ftab"
-                v-for="tab in tabs"
-                :key="tab.key"
-                :class="{ active: activeTab === tab.key }"
-                @click="activeTab = tab.key"
-              >
-                {{ tab.label }}
-              </div>
-            </div>
-            <span style="font-size: 0.8rem; color: var(--text2)">Updated daily</span>
-          </div>
-
-          <table class="lboard-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Member</th>
-                <th>City</th>
-                <th>Points</th>
-                <th>Badge</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr class="lboard-row" v-for="m in members" :key="m.name + activeTab">
-                <td>
-                  <span class="lboard-rank" :class="m.rankClass">
-                    <Medal v-if="m.rankClass" :size="15" :stroke-width="1.8" />
-                    <template v-else>{{ m.rank }}</template>
-                  </span>
-                </td>
-                <td>
-                  <div class="lboard-member">
-                    <img v-if="m.img" :src="m.img" alt="" class="lboard-avatar" />
-                    <div v-else class="lboard-avatar-placeholder">{{ m.initial }}</div>
-                    <div>
-                      <div class="lboard-name">{{ m.name }}</div>
-                      <div class="lboard-city">{{ m.city }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td style="color: var(--text2); font-size: 0.85rem">{{ m.city }}</td>
-                <td>
-                  <span class="lboard-score">{{ m.points }}</span>
-                </td>
-                <td>
-                  <span class="lboard-badge">{{ m.badge }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  </div>
+  </main>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { Globe2, Medal } from 'lucide-vue-next';
-import { useScrollReveal } from '../composables/useAnimations.js';
-import PageHero from '../components/PageHero.vue';
-import { leaderboardData } from '@/data/leaderboard.js';
+import { computed, ref } from 'vue';
+import {
+  ArrowRight,
+  ArrowUpRight,
+  CalendarDays,
+  ChevronDown,
+  Clock3,
+  ExternalLink,
+  MapPin,
+  Search,
+  SearchX,
+  Tag,
+  Users,
+  X,
+  BookOpen,
+  Code2,
+  Coffee,
+  UsersRound,
+} from 'lucide-vue-next';
 
-const imgDelhi =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911362/sundarbans/src/assets/regions/delhi.jpg';
-const imgMumbai =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911367/sundarbans/src/assets/regions/mumbai.jpg';
-const imgBangalore =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911358/sundarbans/src/assets/regions/bangalore.jpg';
-const imgKolkata =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911364/sundarbans/src/assets/regions/kolkata.jpg';
-const imgHyderabad =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911363/sundarbans/src/assets/regions/hyderabad.jpg';
-const imgPatna =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911369/sundarbans/src/assets/regions/patna.jpg';
-const imgChandigarh =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911359/sundarbans/src/assets/regions/chandigarh.webp';
-const imgChennai =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911360/sundarbans/src/assets/regions/chennai.jpg';
-const imgLucknow =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911366/sundarbans/src/assets/regions/lucknow.jpg';
+import { regionConfigs } from './meetups/regionConfigs.js';
 
-useScrollReveal();
+/* ============================================================
+   REGION METADATA
 
-const router = useRouter();
-const hoveredRegion = ref(null);
+   Keep the URL slugs exactly aligned with RegionMeetupsView.vue.
+   ============================================================ */
 
-const regions = [
+const cities = [
   {
-    slug: 'delhi-ncr',
-    name: 'Delhi-NCR',
-    members: '320+',
-    image: imgDelhi,
-    badge: 'Most Active',
-    featured: true,
+    key: 'bangalore',
+    slug: 'bangalore',
+    name: 'Bangalore',
   },
-  { slug: 'mumbai', name: 'Mumbai', members: '450+', image: imgMumbai, badge: 'Largest Chapter' },
-  { slug: 'bangalore', name: 'Bangalore', members: '390+', image: imgBangalore, badge: null },
-  { slug: 'kolkata', name: 'Kolkata', members: '280+', image: imgKolkata, badge: null },
-  { slug: 'hyderabad', name: 'Hyderabad', members: '210+', image: imgHyderabad, badge: null },
-  { slug: 'patna', name: 'Patna', members: '180+', image: imgPatna, badge: null },
   {
+    key: 'chandigarh',
     slug: 'chandigarh',
     name: 'Chandigarh',
-    members: '120+',
-    image: imgChandigarh,
-    badge: 'Rising Chapter',
   },
-  { slug: 'chennai', name: 'Chennai', members: '150+', image: imgChennai, badge: null },
-  { slug: 'lucknow', name: 'Lucknow', members: '110+', image: imgLucknow, badge: null },
+  {
+    key: 'chennai',
+    slug: 'chennai',
+    name: 'Chennai',
+  },
+  {
+    key: 'delhi',
+    slug: 'delhi-ncr',
+    name: 'Delhi NCR',
+  },
+  {
+    key: 'hyderabad',
+    slug: 'hyderabad',
+    name: 'Hyderabad',
+  },
+  {
+    key: 'kolkata',
+    slug: 'kolkata',
+    name: 'Kolkata',
+  },
+  {
+    key: 'lucknow',
+    slug: 'lucknow',
+    name: 'Lucknow',
+  },
+  {
+    key: 'mumbai',
+    slug: 'mumbai',
+    name: 'Mumbai',
+  },
+  {
+    key: 'patna',
+    slug: 'patna',
+    name: 'Patna',
+  },
 ];
 
-function goToRegion(slug) {
-  router.push('/meetups/' + slug);
+/* ============================================================
+   STATE
+   ============================================================ */
+
+const searchQuery = ref('');
+const activeFilter = ref('all');
+const visibleLimit = ref(6);
+
+const filters = [
+  { key: 'all', label: 'All meetups' },
+  { key: 'recent', label: 'Recent' },
+  { key: 'attendance', label: 'Most attended' },
+  { key: 'photos', label: 'With photos' },
+];
+
+/* ============================================================
+   INTENT CARDS
+
+   These are discovery shortcuts, not fake event categories.
+   They search the actual meetup metadata.
+   ============================================================ */
+
+const intents = [
+  {
+    key: 'learn',
+    title: 'Learn',
+    description: 'Study sessions, talks and knowledge sharing',
+    icon: BookOpen,
+  },
+  {
+    key: 'build',
+    title: 'Build',
+    description: 'Projects, technology and collaboration',
+    icon: Code2,
+  },
+  {
+    key: 'social',
+    title: 'Meet people',
+    description: 'Casual gatherings and community time',
+    icon: Coffee,
+  },
+  {
+    key: 'community',
+    title: 'Find your people',
+    description: 'Explore your city chapter',
+    icon: UsersRound,
+  },
+];
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+
+function parseDate(value) {
+  if (!value) return null;
+
+  const parsed = new Date(value);
+
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed;
+  }
+
+  return null;
 }
 
-const RANK_CLASSES = ['rank-1', 'rank-2', 'rank-3'];
+function normalize(value) {
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-const tabs = [
-  { label: 'All Time', key: 'allTime' },
-  { label: 'Term 1 (Jan–Apr)', key: 'term1' },
-  { label: 'Term 2 (May–Aug)', key: 'term2' },
-  { label: 'Term 3 (Sep–Dec)', key: 'term3' },
-];
+function makeDateParts(value) {
+  const date = parseDate(value);
 
-const activeTab = ref('allTime');
+  if (!date) {
+    return {
+      day: '',
+      month: '',
+    };
+  }
 
-const members = computed(() => {
-  const raw = leaderboardData[activeTab.value] ?? [];
-  return [...raw]
-    .sort((a, b) => b.points - a.points)
-    .map((m, i) => ({
-      ...m,
-      rank: String(i + 1),
-      rankClass: RANK_CLASSES[i] ?? '',
-      points: m.points.toLocaleString(),
-    }));
+  return {
+    day: new Intl.DateTimeFormat('en-IN', {
+      day: '2-digit',
+    }).format(date),
+
+    month: new Intl.DateTimeFormat('en-IN', {
+      month: 'short',
+    }).format(date),
+  };
+}
+
+/* ============================================================
+   NORMALIZE THE EXISTING REGION CONFIG DATA
+
+   regionConfigs already handles the different source schemas
+   (Bangalore, Delhi, Patna, etc.), so the landing page consumes
+   its normalized shape instead of knowing about raw CSV columns.
+   ============================================================ */
+
+const allMeetups = computed(() => {
+  const records = [];
+
+  cities.forEach((city) => {
+    const config = regionConfigs[city.key];
+
+    if (!config) return;
+
+    const past = Array.isArray(config.pastMeetups)
+      ? config.pastMeetups
+      : [];
+
+    past.forEach((meetup) => {
+      const date = parseDate(meetup.date);
+      const dateParts = makeDateParts(meetup.date);
+
+      records.push({
+        ...meetup,
+
+        key: `${city.key}-${meetup.id}`,
+        city: city.name,
+        cityKey: city.key,
+        slug: city.slug,
+
+        title:
+          meetup.title ||
+          `${city.name} Community Meetup`,
+
+        about:
+          meetup.about ||
+          'Meetup details are available in the chapter archive.',
+
+        tags: Array.isArray(meetup.tags)
+          ? meetup.tags.filter(Boolean)
+          : [],
+
+        dateObject: date,
+
+        dateDay: dateParts.day,
+        dateMonth: dateParts.month,
+
+        externalUrl: meetup.instaUrl || null,
+      });
+    });
+  });
+
+  return records;
 });
+
+/* ============================================================
+   UPCOMING
+
+   The current regionConfigs schema exposes `upcoming` separately.
+   This also checks historical records defensively in case a future
+   dated record exists in the imported data.
+   ============================================================ */
+
+const upcomingMeetups = computed(() => {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  const upcoming = [];
+
+  cities.forEach((city) => {
+    const config = regionConfigs[city.key];
+
+    if (!config?.upcoming) return;
+
+    const event = config.upcoming;
+    const date = parseDate(event.date);
+
+    if (date && date < now) return;
+
+    upcoming.push({
+      ...event,
+      key: `${city.key}-upcoming`,
+      city: city.name,
+      cityKey: city.key,
+      slug: city.slug,
+      title: event.name || `${city.name} Meetup`,
+      location: event.venue || event.address1 || null,
+      about: event.about || null,
+      externalUrl: event.instaUrl || null,
+      time: event.time || null,
+    });
+  });
+
+  return upcoming.sort((a, b) => {
+    const aDate = parseDate(a.date)?.getTime() ?? Infinity;
+    const bDate = parseDate(b.date)?.getTime() ?? Infinity;
+
+    return aDate - bDate;
+  });
+});
+
+/* ============================================================
+   SEARCH + FILTER
+   ============================================================ */
+
+const filteredMeetups = computed(() => {
+  const query = normalize(searchQuery.value);
+
+  let result = [...allMeetups.value];
+
+  if (query) {
+    result = result.filter((meetup) => {
+      const haystack = normalize(
+        [
+          meetup.title,
+          meetup.city,
+          meetup.location,
+          meetup.about,
+          meetup.meetupNumber,
+          ...(meetup.tags || []),
+        ].join(' ')
+      );
+
+      return haystack.includes(query);
+    });
+  }
+
+  if (activeFilter.value === 'recent') {
+    result = result.filter((meetup) => meetup.dateObject);
+  }
+
+  if (activeFilter.value === 'attendance') {
+    result = result
+      .filter((meetup) => meetup.attended)
+      .sort(
+        (a, b) =>
+          Number(b.attended || 0) -
+          Number(a.attended || 0)
+      );
+  }
+
+  if (activeFilter.value === 'photos') {
+    result = result.filter(
+      (meetup) =>
+        Array.isArray(meetup.photos) &&
+        meetup.photos.length > 0
+    );
+  }
+
+  if (
+    activeFilter.value === 'recent' ||
+    activeFilter.value === 'all'
+  ) {
+    result.sort((a, b) => {
+      const aDate = a.dateObject?.getTime() ?? -Infinity;
+      const bDate = b.dateObject?.getTime() ?? -Infinity;
+
+      return bDate - aDate;
+    });
+  }
+
+  return result;
+});
+
+const visibleMeetups = computed(() =>
+  filteredMeetups.value.slice(0, visibleLimit.value)
+);
+
+/* ============================================================
+   CITY DATA
+   ============================================================ */
+
+const visibleCities = computed(() => {
+  const query = normalize(searchQuery.value);
+
+  return cities
+    .map((city) => {
+      const config = regionConfigs[city.key];
+
+      return {
+        ...city,
+        meetups: config?.pastMeetups?.length ?? 0,
+      };
+    })
+    .filter((city) => {
+      if (!query) return true;
+
+      return normalize(city.name).includes(query);
+    })
+    .sort((a, b) => b.meetups - a.meetups);
+});
+
+/* ============================================================
+   GLOBAL STATS
+
+   "Attendance" is deliberately labelled as recorded attendance,
+   because the source data represents meetup attendance rather
+   than unique members.
+   ============================================================ */
+
+const stats = computed(() => {
+  const records = allMeetups.value;
+
+  return {
+    meetups: records.length,
+
+    cities: cities.filter(
+      (city) =>
+        (regionConfigs[city.key]?.pastMeetups?.length ?? 0) > 0
+    ).length,
+
+    attendance: records.reduce(
+      (sum, meetup) =>
+        sum + Number(meetup.attended || 0),
+      0
+    ),
+  };
+});
+
+/* ============================================================
+   INTENT ACTIONS
+   ============================================================ */
+
+function setIntent(intent) {
+  activeFilter.value = 'all';
+
+  const mappings = {
+    learn: ['learn', 'study', 'academic', 'session', 'talk'],
+    build: ['tech', 'technology', 'project', 'coding', 'developer'],
+    social: ['social', 'hangout', 'casual', 'fun'],
+    community: [],
+  };
+
+  const terms = mappings[intent] || [];
+
+  if (!terms.length) {
+    searchQuery.value = '';
+    document
+      .querySelector('.cities-section')
+      ?.scrollIntoView({ behavior: 'smooth' });
+
+    return;
+  }
+
+  /*
+   * Search against the actual imported data.
+   * We use a broad term because the historical records do not
+   * share one universal event-type field.
+   */
+  searchQuery.value = terms[0];
+
+  document
+    .querySelector('.archive-section')
+    ?.scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetFilters() {
+  searchQuery.value = '';
+  activeFilter.value = 'all';
+  visibleLimit.value = 6;
+}
 </script>
 
 <style scoped>
-.regions-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-.region-card {
-  position: relative;
-  border-radius: var(--rad2);
-  overflow: hidden;
-  cursor: pointer;
-  aspect-ratio: 3/4;
-  border: 1px solid var(--border);
-  transition:
-    border-color 0.3s,
-    transform 0.35s,
-    box-shadow 0.35s;
-}
-.region-card:hover {
-  border-color: var(--border-gold);
-  transform: translateY(-4px);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
-}
-.region-card.featured {
-  border-color: var(--border-card);
-}
-.region-bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition:
-    transform 0.6s ease,
-    filter 0.4s;
-  filter: saturate(0.8) brightness(0.75);
-}
-.region-card:hover .region-bg {
-  transform: scale(1.06);
-  filter: saturate(1) brightness(0.85);
-}
-.region-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(5, 6, 5, 0.88) 0%,
-    rgba(5, 6, 5, 0.3) 50%,
-    transparent 80%
-  );
-  transition: opacity 0.35s;
-}
-.region-card:hover .region-overlay {
-  background: linear-gradient(
-    to top,
-    rgba(5, 6, 5, 0.92) 0%,
-    rgba(5, 6, 5, 0.4) 55%,
-    rgba(213, 166, 58, 0.04) 100%
-  );
-}
-.region-gold-tint {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 80% 60% at 50% 100%,
-    rgba(213, 166, 58, 0.12) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
-}
-.region-content {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 20px;
-}
-.region-top {
-  display: flex;
-  justify-content: flex-end;
-}
-.region-badge {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent2);
-  background: rgba(213, 166, 58, 0.12);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border: 1px solid var(--border-gold);
-  padding: 5px 12px;
-  border-radius: 100px;
-}
-.region-bottom {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.region-name {
-  font-family: var(--font-display);
-  font-size: clamp(20px, 2vw, 26px);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: #ffffff;
-  line-height: 1.1;
-}
-.region-members {
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--text2);
-  letter-spacing: 0.03em;
-}
-.submit-btn {
-  background: var(--accent);
-  color: #000;
-  padding: 12px 28px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  transition: all 0.3s;
-  box-shadow: var(--shadow-sm);
-  font-family: var(--font-body);
-}
-.submit-btn:hover {
-  background: var(--gold-light);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-.card-base {
+/* ============================================================
+   PAGE
+   ============================================================ */
+
+.meetups-page {
+  min-height: 100vh;
   background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--rad2);
-  padding: 2.5rem;
 }
-.lboard-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 8px;
-  margin-top: 1rem;
-}
-.lboard-table th {
-  text-align: left;
-  padding: 0 16px 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--text2);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
+
+/* ============================================================
+   INTRO
+   ============================================================ */
+
+.meetups-intro {
+  padding: clamp(7rem, 12vw, 9rem) 0 3rem;
   border-bottom: 1px solid var(--border);
 }
-.lboard-row td {
-  background: var(--surface);
-  padding: 16px;
-  transition: background 0.3s;
+
+.intro-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+  gap: 4rem;
+  align-items: end;
 }
-.lboard-row:hover td {
-  background: var(--surface2);
-}
-.lboard-row td:first-child {
-  border-top-left-radius: 12px;
-  border-bottom-left-radius: 12px;
-}
-.lboard-row td:last-child {
-  border-top-right-radius: 12px;
-  border-bottom-right-radius: 12px;
-}
-.lboard-rank {
+
+.eyebrow {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--text2);
-  background: var(--bg);
-  border: 1px solid var(--border);
-}
-.rank-1 {
-  background: rgba(213, 166, 58, 0.15);
+  gap: 0.45rem;
   color: var(--accent);
-  border-color: var(--border-card);
-  font-size: 1.2rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
-.rank-2 {
-  background: rgba(200, 200, 200, 0.1);
-  color: #ccc;
-  border-color: rgba(200, 200, 200, 0.2);
-  font-size: 1.2rem;
-}
-.rank-3 {
-  background: rgba(184, 115, 51, 0.1);
-  color: #b87333;
-  border-color: rgba(184, 115, 51, 0.2);
-  font-size: 1.2rem;
-}
-.lboard-member {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.lboard-avatar,
-.lboard-avatar-placeholder {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid var(--border);
-}
-.lboard-avatar-placeholder {
-  background: var(--surface2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
+.meetups-intro h1 {
+  max-width: 800px;
+  margin-top: 0.7rem;
   font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--accent);
-  font-size: 1.1rem;
-}
-.lboard-name {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.05rem;
-  color: var(--text);
-  line-height: 1.2;
-}
-.lboard-city {
-  font-size: 0.75rem;
-  color: var(--text2);
-  display: none;
-}
-.lboard-score {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--accent);
-}
-.lboard-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 100px;
-  font-size: 0.75rem;
-  color: var(--text2);
-}
-.filter-tabs {
-  display: flex;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 100px;
-  padding: 4px;
-  width: fit-content;
-}
-.ftab {
-  padding: 6px 16px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text2);
-  border-radius: 100px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-.ftab.active {
-  background: var(--accent);
-  color: #000;
-}
-.ftab:hover:not(.active) {
+  font-size: clamp(3rem, 7vw, 6.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.045em;
   color: var(--text);
 }
 
-@media (max-width: 1100px) {
-  .regions-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.meetups-intro h1 span {
+  color: var(--accent);
 }
-@media (max-width: 800px) {
-  .regions-grid {
+
+.intro-copy {
+  max-width: 650px;
+  margin-top: 1.5rem;
+  color: var(--text2);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.intro-stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  border-left: 1px solid var(--border);
+}
+
+.intro-stat {
+  display: flex;
+  flex-direction: column;
+  padding: 0.9rem 0 0.9rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.intro-stat:last-child {
+  border-bottom: 0;
+}
+
+.intro-stat strong {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  color: var(--text);
+}
+
+.intro-stat span {
+  color: var(--text2);
+  font-size: 0.76rem;
+}
+
+/* ============================================================
+   DISCOVERY
+   ============================================================ */
+
+.discovery-panel {
+  margin-top: 3rem;
+  padding: 0.65rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rad2);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 56px;
+  padding: 0 1rem;
+  color: var(--text2);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--rad);
+}
+
+.search-box:focus-within {
+  border-color: var(--border-gold);
+}
+
+.search-box input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+}
+
+.search-box input::placeholder {
+  color: var(--text3);
+}
+
+.clear-search {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text2);
+  background: transparent;
+  cursor: pointer;
+}
+
+.clear-search:hover {
+  color: var(--text);
+  background: var(--surface2);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem 0.35rem 0.2rem;
+}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+
+.meetup-section,
+.intent-section,
+.cities-section,
+.host-section {
+  padding: clamp(4.5rem, 8vw, 7rem) 0;
+}
+
+.upcoming-section {
+  background: var(--bg);
+}
+
+.intent-section,
+.cities-section {
+  background: var(--bg2);
+}
+
+.section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.section-heading--compact {
+  margin-bottom: 1.5rem;
+}
+
+.section-heading h2 {
+  margin-top: 0.35rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  line-height: 1.05;
+  color: var(--text);
+}
+
+.result-count {
+  flex: none;
+  color: var(--text3);
+  font-size: 0.78rem;
+}
+
+/* ============================================================
+   UPCOMING CARDS
+   ============================================================ */
+
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.event-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rad2);
+  transition:
+    border-color 0.3s ease,
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.event-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-card-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.event-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.3rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.event-card-body {
+  flex: 1;
+  padding: 1.5rem;
+}
+
+.event-city {
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.event-card h3 {
+  margin-top: 0.55rem;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  line-height: 1.15;
+}
+
+.event-card-body p {
+  margin-top: 0.8rem;
+  color: var(--text2);
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+
+.event-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1.2rem;
+}
+
+.event-details span,
+.archive-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text2);
+  font-size: 0.74rem;
+}
+
+.event-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.3rem;
+  border-top: 1px solid var(--border);
+}
+
+.external-link,
+.archive-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text2);
+  font-size: 0.73rem;
+  text-decoration: none;
+}
+
+.external-link:hover,
+.archive-link:hover {
+  color: var(--accent);
+}
+
+/* ============================================================
+   EMPTY STATES
+   ============================================================ */
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rad2);
+}
+
+.empty-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  color: var(--accent);
+  background: rgba(213, 166, 58, 0.08);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--rad);
+}
+
+.empty-state h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+}
+
+.empty-state p {
+  max-width: 700px;
+  margin-top: 0.25rem;
+  color: var(--text2);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.empty-state .btn {
+  margin-left: auto;
+  flex: none;
+}
+
+.empty-state--small {
+  color: var(--text2);
+}
+
+/* ============================================================
+   INTENT
+   ============================================================ */
+
+.intent-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.intent-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  min-height: 150px;
+  padding: 1.25rem;
+  text-align: left;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rad2);
+  cursor: pointer;
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease,
+    background 0.3s ease;
+}
+
+.intent-card > svg:first-child {
+  flex: none;
+  color: var(--accent);
+}
+
+.intent-card > svg:last-child {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  color: var(--text3);
+}
+
+.intent-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-card-hover);
+  background: var(--surface2);
+}
+
+.intent-card strong {
+  display: block;
+  padding-right: 1rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.intent-card span {
+  display: block;
+  margin-top: 0.4rem;
+  color: var(--text2);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   ARCHIVE
+   ============================================================ */
+
+.archive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.archive-card {
+  display: grid;
+  grid-template-columns: 75px minmax(0, 1fr) auto;
+  gap: 1.2rem;
+  align-items: center;
+  padding: 1.15rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rad2);
+  transition:
+    border-color 0.3s ease,
+    background 0.3s ease;
+}
+
+.archive-card:hover {
+  border-color: var(--border-card-hover);
+  background: var(--surface2);
+}
+
+.archive-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 68px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--rad);
+}
+
+.archive-date span {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--text);
+}
+
+.archive-date small {
+  color: var(--accent);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.archive-topline {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.archive-topline span + span {
+  color: var(--text3);
+}
+
+.archive-main h3 {
+  margin-top: 0.25rem;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+.archive-main p {
+  max-width: 800px;
+  margin-top: 0.35rem;
+  overflow: hidden;
+  color: var(--text2);
+  font-size: 0.76rem;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.archive-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.2rem;
+  margin-top: 0.55rem;
+}
+
+.archive-link {
+  width: 38px;
+  height: 38px;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+
+.load-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 1.5rem auto 0;
+  padding: 0.7rem 1.1rem;
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--border-gold);
+  border-radius: var(--rad);
+  cursor: pointer;
+}
+
+/* ============================================================
+   CITIES
+   ============================================================ */
+
+.cities-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.city-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem;
+  color: var(--text);
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rad2);
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.city-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-card-hover);
+}
+
+.city-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  color: var(--accent);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--rad);
+}
+
+.city-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.city-content h3 {
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+}
+
+.city-content p {
+  margin-top: 0.1rem;
+  color: var(--text2);
+  font-size: 0.7rem;
+}
+
+/* ============================================================
+   HOST CTA
+   ============================================================ */
+
+.host-section {
+  padding-top: 3rem;
+  padding-bottom: 6rem;
+}
+
+.host-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3rem;
+  padding: clamp(2rem, 5vw, 4rem);
+  background:
+    linear-gradient(
+      110deg,
+      rgba(213, 166, 58, 0.08),
+      transparent 60%
+    ),
+    var(--surface);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--rad2);
+}
+
+.host-card h2 {
+  max-width: 650px;
+  margin-top: 0.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  line-height: 1.05;
+}
+
+.host-card h2 span {
+  color: var(--accent);
+}
+
+.host-card p {
+  max-width: 650px;
+  margin-top: 0.8rem;
+  color: var(--text2);
+  font-size: 0.86rem;
+}
+
+.host-card .btn {
+  flex: none;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1000px) {
+  .intro-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .intro-stats {
+    grid-template-columns: repeat(3, 1fr);
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .intro-stat {
+    padding: 1rem;
+    border-bottom: 0;
+    border-right: 1px solid var(--border);
+  }
+
+  .intro-stat:last-child {
+    border-right: 0;
+  }
+
+  .intent-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .card-base {
-    padding: 1.5rem;
-  }
-  .lboard-table th:nth-child(3),
-  .lboard-row td:nth-child(3) {
-    display: none;
-  }
-  .lboard-city {
-    display: block;
-    margin-top: 2px;
+
+  .cities-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
-@media (max-width: 480px) {
-  .regions-grid {
+
+@media (max-width: 760px) {
+  .meetups-intro {
+    padding-top: 6rem;
+  }
+
+  .meetups-intro h1 {
+    font-size: clamp(2.8rem, 15vw, 5rem);
+  }
+
+  .events-grid {
     grid-template-columns: 1fr;
   }
-  .lboard-table th:last-child,
-  .lboard-row td:last-child {
+
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .empty-state {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .empty-state .btn {
+    margin-left: 0;
+  }
+
+  .archive-card {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+
+  .archive-link {
     display: none;
+  }
+
+  .host-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .meetups-intro {
+    padding-bottom: 2rem;
+  }
+
+  .intro-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .intro-stat {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .intro-stat:last-child {
+    border-bottom: 0;
+  }
+
+  .filters {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.5rem;
+  }
+
+  .filters .sel {
+    flex: none;
+  }
+
+  .intent-grid,
+  .cities-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .archive-card {
+    grid-template-columns: 1fr;
+  }
+
+  .archive-date {
+    width: 58px;
+  }
+
+  .archive-main p {
+    -webkit-line-clamp: 3;
+  }
+
+  .event-footer {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 </style>
