@@ -1,584 +1,514 @@
 <template>
-  <div class="meetups-page">
-    <!-- COMPACT INTRO -->
-    <section class="meetups-intro">
-      <div class="container">
-        <div class="section-tag">Sundarbans Community</div>
-        <h1 class="intro-title">
-          Meetups <span class="tg">that bring us together.</span>
-        </h1>
-        <p class="intro-sub">
-          Find students, events and communities around you — or suggest something you'd like to see.
-        </p>
+  <main class="meetups-page">
+    <!-- =========================================================
+         PLAYFUL EVENT HERO
+         ========================================================= -->
+    <section
+      ref="heroRef"
+      class="event-hero"
+      @mousemove="handleHeroMove"
+      @mouseleave="resetHero"
+    >
+      <div class="hero-grid"></div>
+      <div class="hero-sun"></div>
+      <div class="hero-cloud cloud-one"></div>
+      <div class="hero-cloud cloud-two"></div>
+
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <div class="eyebrow">
+            <span class="live-dot"></span>
+            Sundarbans Community Events
+          </div>
+
+          <h1>
+            Don't just
+            <span class="scribble-word">attend.</span>
+            <br />
+            <span class="hero-highlight">belong.</span>
+          </h1>
+
+          <p>
+            Find something happening around you, meet people who share your
+            interests, or create the next thing everyone talks about.
+          </p>
+
+          <div class="hero-actions">
+            <button class="hero-button primary" type="button" @click="focusSearch">
+              <Search :size="18" />
+              Find a meetup
+            </button>
+
+            <button class="hero-button secondary" type="button" @click="toggleSuggestion">
+              <Plus :size="18" />
+              Suggest one
+            </button>
+          </div>
+
+          <div class="hero-note">
+            <span>⌁</span>
+            Search by city, topic, venue, meetup number or anything you remember.
+          </div>
+        </div>
+
+        <!-- CSS-only 3D event object -->
+        <div class="hero-stage" aria-hidden="true">
+          <div
+            class="event-ticket"
+            :style="heroTransform"
+          >
+            <div class="ticket-hole hole-one"></div>
+            <div class="ticket-hole hole-two"></div>
+
+            <div class="ticket-top">
+              <span class="ticket-label">NEXT UP</span>
+              <span class="ticket-mark">✦</span>
+            </div>
+
+            <div class="ticket-title">
+              MEET
+              <br />
+              SOMEONE
+              <br />
+              NEW.
+            </div>
+
+            <div class="ticket-meta">
+              <span>PEOPLE</span>
+              <span>IDEAS</span>
+              <span>CHAOS</span>
+            </div>
+
+            <div class="ticket-barcode">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              <i></i><i></i><i></i><i></i><i></i>
+            </div>
+          </div>
+
+          <div class="floating-doodle doodle-smile">⌣</div>
+          <div class="floating-doodle doodle-star">✦</div>
+          <div class="floating-doodle doodle-arrow">↗</div>
+          <div class="floating-label label-one">GOOD<br />PEOPLE</div>
+          <div class="floating-label label-two">GOOD<br />IDEAS</div>
+        </div>
+      </div>
+
+      <div class="hero-bottom">
+        <div class="container hero-bottom-inner">
+          <span>SCROLL TO EXPLORE</span>
+          <span class="scroll-line"></span>
+          <span>{{ regions.length }} cities</span>
+        </div>
       </div>
     </section>
 
-    <!-- SEARCH -->
-    <section class="search-section">
+    <!-- =========================================================
+         SEARCH
+         ========================================================= -->
+    <section ref="searchSection" class="search-section">
       <div class="container">
-        <div class="search-box">
-          <Search :size="20" :stroke-width="1.8" />
+        <div class="search-wrap">
+          <div class="search-icon">
+            <Search :size="22" />
+          </div>
+
           <input
             v-model="searchQuery"
             type="search"
-            placeholder="Search meetups, cities, topics, venues..."
-            aria-label="Search meetups"
+            placeholder="What are you looking for?"
+            autocomplete="off"
+            @keydown.esc="searchQuery = ''"
           />
+
+          <div v-if="searchQuery" class="search-count">
+            {{ searchResults.length }} found
+          </div>
+
           <button
             v-if="searchQuery"
-            class="clear-search"
+            class="icon-button"
             type="button"
-            @click="searchQuery = ''"
             aria-label="Clear search"
+            @click="searchQuery = ''"
           >
-            <X :size="17" />
+            <X :size="18" />
           </button>
         </div>
 
-        <!-- SEARCH RESULTS APPEAR DIRECTLY BELOW SEARCH -->
-        <div v-if="searchQuery.trim()" class="inline-results">
-          <div class="result-header">
+        <div class="search-examples">
+          <span>Try</span>
+          <button type="button" @click="setSearch('Bangalore')">Bangalore</button>
+          <button type="button" @click="setSearch('tech')">tech</button>
+          <button type="button" @click="setSearch('cafe')">cafe</button>
+          <button type="button" @click="setSearch('coding')">coding</button>
+        </div>
+
+        <!-- RESULTS ALWAYS APPEAR DIRECTLY BELOW SEARCH -->
+        <div v-if="searchQuery.trim()" class="result-drawer">
+          <div class="drawer-heading">
             <div>
-              <span class="section-tag">Search results</span>
-              <h3>
-                {{ filteredSearchResults.length }}
-                {{ filteredSearchResults.length === 1 ? 'meetup' : 'meetups' }} found
-              </h3>
+              <span class="mini-label">SEARCHING THE COMMUNITY</span>
+              <h2>
+                {{ searchResults.length }}
+                {{ searchResults.length === 1 ? 'match' : 'matches' }}
+              </h2>
             </div>
-            <span class="result-query">“{{ searchQuery }}”</span>
+
+            <span class="query-pill">{{ searchQuery }}</span>
           </div>
 
-          <div v-if="filteredSearchResults.length" class="meetup-results-grid">
-            <article
-              v-for="meetup in filteredSearchResults"
-              :key="meetup.key"
-              class="meetup-result-card"
-            >
-              <div class="result-card-top">
-                <span class="result-city">{{ meetup.city }}</span>
-                <span v-if="meetup.meetupNumber" class="result-number">
-                  {{ meetup.meetupNumber }}
-                </span>
-              </div>
-
-              <h4>{{ meetup.title }}</h4>
-
-              <div class="result-meta">
-                <span v-if="meetup.date">
-                  <Calendar :size="14" />
-                  {{ meetup.date }}
-                </span>
-                <span v-if="meetup.location">
-                  <MapPin :size="14" />
-                  {{ meetup.location }}
-                </span>
-              </div>
-
-              <p v-if="meetup.about">
-                {{ meetup.about }}
-              </p>
-
-              <div v-if="meetup.tags?.length" class="result-tags">
-                <span v-for="tag in meetup.tags.slice(0, 4)" :key="tag">
-                  {{ tag }}
-                </span>
-              </div>
-
-              <a
-                v-if="meetup.instaUrl"
-                :href="meetup.instaUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="result-link"
-              >
-                View meetup →
-              </a>
-            </article>
-          </div>
-
-          <div v-else class="empty-result">
-            <Search :size="28" />
-            <h4>No matching meetups</h4>
-            <p>Try a city, topic, venue or meetup number.</p>
-          </div>
+          <MeetupResults
+            :items="searchResults"
+            empty-title="Nothing matched that search"
+            empty-text="Try another city, topic, venue or keyword."
+          />
         </div>
       </div>
     </section>
 
-    <!-- CITIES - EXISTING VISUAL DESIGN PRESERVED -->
-    <section class="section rs city-section" ref="gridSection">
+    <!-- =========================================================
+         CITIES
+         ========================================================= -->
+    <section class="section cities-section">
       <div class="container">
-        <div class="sec-hdr">
-          <div class="section-tag">Across India</div>
-          <h2 class="section-title-xl">Choose <span class="tg">your city</span></h2>
-        </div>
-
-        <div class="regions-grid">
-          <div
-            v-for="region in visibleRegions"
-            :key="region.slug"
-            class="region-card reveal"
-            :class="{ featured: region.featured }"
-            @mouseenter="hoveredRegion = region.slug"
-            @mouseleave="hoveredRegion = null"
-            @click="goToRegion(region.slug)"
-          >
-            <img
-              :src="region.image"
-              :alt="region.name"
-              class="region-bg"
-              loading="lazy"
-            />
-
-            <div class="region-overlay"></div>
-
-            <div
-              v-if="hoveredRegion === region.slug"
-              class="region-gold-tint"
-            ></div>
-
-            <div class="region-content">
-              <div class="region-top">
-                <span v-if="region.badge" class="region-badge">
-                  {{ region.badge }}
-                </span>
-              </div>
-
-              <div class="region-bottom">
-                <h3 class="region-name">{{ region.name }}</h3>
-                <p class="region-members">{{ region.members }} members</p>
-              </div>
-            </div>
+        <div class="section-heading">
+          <div>
+            <span class="mini-label">WHERE THE COMMUNITY LIVES</span>
+            <h2>Pick your <span>scene.</span></h2>
           </div>
-        </div>
 
-        <div v-if="!visibleRegions.length" class="city-empty">
-          <MapPin :size="28" />
-          <h3>No city found</h3>
-          <p>Try searching for another city or meetup.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- WHAT ARE YOU LOOKING FOR -->
-    <section class="section interest-section">
-      <div class="container">
-        <div class="sec-hdr">
-          <div class="section-tag">Find your kind of meetup</div>
-          <h2 class="section-title-xl">
-            What are <span class="tg">you looking for?</span>
-          </h2>
-          <p class="sec-sub">
-            Choose an interest and the relevant meetups will appear right here.
+          <p>
+            Every city has its own rhythm. Open a chapter to see its meetups.
           </p>
         </div>
 
-        <div class="interest-grid">
+        <div class="city-mosaic">
+          <button
+            v-for="(region, index) in filteredRegions"
+            :key="region.slug"
+            type="button"
+            class="city-card"
+            :class="{
+              'city-large': index === 0,
+              'city-tall': index === 3
+            }"
+            @click="goToRegion(region.slug)"
+          >
+            <img :src="region.image" :alt="region.name" loading="lazy" />
+
+            <div class="city-shade"></div>
+
+            <span v-if="region.badge" class="city-badge">
+              {{ region.badge }}
+            </span>
+
+            <div class="city-doodle">✦</div>
+
+            <div class="city-info">
+              <span>{{ region.members }} members</span>
+              <strong>{{ region.name }}</strong>
+              <small>Explore chapter →</small>
+            </div>
+          </button>
+        </div>
+
+        <div v-if="!filteredRegions.length" class="simple-empty">
+          <MapPin :size="26" />
+          <strong>No city matches "{{ searchQuery }}"</strong>
+          <span>Try a different search.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         INTERESTS
+         ========================================================= -->
+    <section class="section interests-section">
+      <div class="container">
+        <div class="section-heading centered">
+          <span class="mini-label">CHOOSE YOUR ADVENTURE</span>
+          <h2>What do you want to <span>do?</span></h2>
+          <p>Tap one. We will put the relevant events right underneath.</p>
+        </div>
+
+        <div class="interest-row">
           <button
             v-for="interest in interests"
             :key="interest.key"
             type="button"
             class="interest-card"
-            :class="{ active: activeInterest === interest.key }"
+            :class="{ selected: activeInterest === interest.key }"
             @click="toggleInterest(interest.key)"
           >
+            <span class="interest-number">{{ interest.number }}</span>
             <div class="interest-icon">
-              <component :is="interest.icon" :size="25" :stroke-width="1.6" />
+              <component :is="interest.icon" :size="27" :stroke-width="1.8" />
             </div>
-
-            <div>
-              <h3>{{ interest.label }}</h3>
-              <p>{{ interest.description }}</p>
-            </div>
-
-            <span class="interest-arrow">→</span>
+            <strong>{{ interest.label }}</strong>
+            <p>{{ interest.description }}</p>
+            <span class="interest-arrow">
+              {{ activeInterest === interest.key ? '×' : '↗' }}
+            </span>
           </button>
         </div>
 
-        <!-- INTEREST RESULTS APPEAR DIRECTLY BELOW BUTTONS -->
-        <div v-if="activeInterest" class="interest-results">
-          <div class="result-header">
+        <!-- INTEREST RESULTS DIRECTLY UNDER THE BUTTONS -->
+        <div v-if="activeInterest" class="result-drawer interest-drawer">
+          <div class="drawer-heading">
             <div>
-              <span class="section-tag">Your selection</span>
-              <h3>{{ activeInterestLabel }}</h3>
+              <span class="mini-label">YOU CHOSE</span>
+              <h2>{{ activeInterestLabel }}</h2>
             </div>
 
             <button
               type="button"
-              class="close-results"
+              class="text-button"
               @click="activeInterest = null"
             >
-              Clear
-              <X :size="15" />
+              Clear ×
             </button>
           </div>
 
-          <div v-if="interestResults.length" class="meetup-results-grid">
-            <article
-              v-for="meetup in interestResults"
-              :key="meetup.key"
-              class="meetup-result-card"
-            >
-              <div class="result-card-top">
-                <span class="result-city">{{ meetup.city }}</span>
-                <span v-if="meetup.meetupNumber" class="result-number">
-                  {{ meetup.meetupNumber }}
-                </span>
-              </div>
-
-              <h4>{{ meetup.title }}</h4>
-
-              <div class="result-meta">
-                <span v-if="meetup.date">
-                  <Calendar :size="14" />
-                  {{ meetup.date }}
-                </span>
-
-                <span v-if="meetup.location">
-                  <MapPin :size="14" />
-                  {{ meetup.location }}
-                </span>
-              </div>
-
-              <p>{{ meetup.about || 'Community meetup.' }}</p>
-
-              <div v-if="meetup.tags?.length" class="result-tags">
-                <span v-for="tag in meetup.tags.slice(0, 4)" :key="tag">
-                  {{ tag }}
-                </span>
-              </div>
-
-              <a
-                v-if="meetup.instaUrl"
-                :href="meetup.instaUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="result-link"
-              >
-                View meetup →
-              </a>
-            </article>
-          </div>
-
-          <div v-else class="empty-result">
-            <Search :size="28" />
-            <h4>No matching meetups yet</h4>
-            <p>
-              There aren't enough meetups in this category yet.
-              Try another interest or suggest one below.
-            </p>
-          </div>
+          <MeetupResults
+            :items="interestResults"
+            empty-title="No exact matches yet"
+            empty-text="There aren't enough tagged events here yet. Be the person who starts one."
+          />
         </div>
       </div>
     </section>
 
-    <!-- UPCOMING -->
+    <!-- =========================================================
+         UPCOMING EVENTS
+         ========================================================= -->
     <section class="section upcoming-section">
       <div class="container">
-        <div class="sec-hdr">
-          <div class="section-tag">What's next</div>
-          <h2 class="section-title-xl">
-            Upcoming <span class="tg">Meetups</span>
-          </h2>
-          <p class="sec-sub">
-            Meetups that are currently scheduled and haven't happened yet.
+        <div class="section-heading">
+          <div>
+            <span class="mini-label">DON'T MISS THIS</span>
+            <h2>Coming <span>up.</span></h2>
+          </div>
+
+          <p>
+            Only currently scheduled events live here. The archive stays out of
+            your way until you ask for it.
           </p>
         </div>
 
-        <div v-if="upcomingMeetups.length" class="upcoming-grid">
+        <div v-if="upcomingMeetups.length" class="event-board">
           <article
-            v-for="meetup in upcomingMeetups"
-            :key="meetup.key"
-            class="upcoming-card-small"
+            v-for="(event, index) in upcomingMeetups"
+            :key="event.key"
+            class="event-card"
+            :class="{ 'event-featured': index === 0 }"
           >
-            <div class="upcoming-small-top">
-              <span class="upcoming-badge">
-                <span></span>
-                Upcoming
-              </span>
-
-              <span class="result-city">
-                {{ meetup.city }}
-              </span>
+            <div class="event-date">
+              <span>{{ event.month }}</span>
+              <strong>{{ event.day }}</strong>
             </div>
 
-            <h3>{{ meetup.title }}</h3>
-
-            <div class="upcoming-details">
-              <div v-if="meetup.date">
-                <Calendar :size="15" />
-                {{ meetup.date }}
+            <div class="event-main">
+              <div class="event-topline">
+                <span>{{ event.city }}</span>
+                <span v-if="event.meetupNumber">{{ event.meetupNumber }}</span>
               </div>
 
-              <div v-if="meetup.time">
-                <Clock :size="15" />
-                {{ meetup.time }}
-              </div>
+              <h3>{{ event.title }}</h3>
 
-              <div v-if="meetup.location">
-                <MapPin :size="15" />
-                {{ meetup.location }}
+              <p>{{ event.about }}</p>
+
+              <div class="event-meta">
+                <span v-if="event.time">
+                  <Clock :size="15" />
+                  {{ event.time }}
+                </span>
+                <span v-if="event.location">
+                  <MapPin :size="15" />
+                  {{ event.location }}
+                </span>
               </div>
             </div>
-
-            <p>{{ meetup.about }}</p>
 
             <a
-              v-if="meetup.mapsUrl"
-              :href="meetup.mapsUrl"
+              v-if="event.mapsUrl"
+              :href="event.mapsUrl"
               target="_blank"
               rel="noopener noreferrer"
-              class="result-link"
+              class="event-go"
             >
-              Open location →
+              Go →
             </a>
           </article>
         </div>
 
-        <div v-else class="no-upcoming">
-          <div class="no-upcoming-icon">
-            <Calendar :size="30" :stroke-width="1.6" />
-          </div>
-
-          <h3>No upcoming meetup scheduled</h3>
-          <p>
-            Nothing is currently scheduled. Check back later or suggest a meetup
-            for the community.
-          </p>
+        <div v-else class="empty-board">
+          <div class="empty-face">:)</div>
+          <h3>Nothing scheduled yet.</h3>
+          <p>That means you have an excellent opportunity to suggest something.</p>
+          <button type="button" class="dark-button" @click="toggleSuggestion">
+            Start an idea →
+          </button>
         </div>
       </div>
     </section>
 
-    <!-- SUGGEST A MEETUP -->
-    <section class="section suggest-section">
+    <!-- =========================================================
+         SUGGEST A MEETUP
+         ========================================================= -->
+    <section ref="suggestionSection" class="section suggestion-section">
       <div class="container">
-        <div class="suggest-box">
-          <div class="suggest-content">
-            <div class="section-tag">Make it happen</div>
-
-            <h2>
-              Suggest a <span class="tg">Meetup</span>
-            </h2>
-
-            <p>
-              Have an idea for a meetup, activity, study session, tech discussion
-              or casual gathering? Tell the community team about it.
-            </p>
+        <div class="suggest-card">
+          <div class="suggest-art" aria-hidden="true">
+            <div class="speech speech-one">HEY!</div>
+            <div class="speech speech-two">LET'S<br />MEET.</div>
+            <div class="suggest-face">
+              <span></span>
+              <span></span>
+              <i></i>
+            </div>
           </div>
 
-          <button
-            type="button"
-            class="submit-btn"
-            @click="showSuggestionForm = !showSuggestionForm"
-          >
-            {{ showSuggestionForm ? 'Close form' : 'Suggest a Meetup' }}
-          </button>
+          <div class="suggest-copy">
+            <span class="mini-label">YOUR TURN</span>
+            <h2>Have an idea?<br /><span>Make it real.</span></h2>
+            <p>
+              A coding night, chai meetup, study circle, game night, design jam,
+              anything. Tell the community what you want to happen.
+            </p>
+
+            <button type="button" class="dark-button" @click="showSuggestion = !showSuggestion">
+              {{ showSuggestion ? 'Close suggestion' : 'Suggest a meetup →' }}
+            </button>
+          </div>
         </div>
 
-        <!-- FORM APPEARS DIRECTLY BELOW THE BUTTON -->
-        <div v-if="showSuggestionForm" class="suggest-form">
-          <div class="suggest-form-header">
-            <div>
-              <span class="section-tag">Your idea</span>
-              <h3>Tell us about your meetup</h3>
-            </div>
-
-            <button
-              type="button"
-              class="form-close"
-              @click="showSuggestionForm = false"
-            >
-              <X :size="18" />
-            </button>
+        <!-- FORM DIRECTLY BELOW SUGGESTION -->
+        <div v-if="showSuggestion" class="suggest-form">
+          <div class="form-title">
+            <span class="mini-label">NEW EVENT IDEA</span>
+            <h3>What should we build together?</h3>
           </div>
 
           <div class="form-grid">
             <label>
               <span>Your name</span>
-              <input
-                v-model="suggestion.name"
-                type="text"
-                placeholder="Your name"
-              />
+              <input v-model="suggestion.name" type="text" placeholder="Prateek" />
             </label>
 
             <label>
               <span>City</span>
-              <input
-                v-model="suggestion.city"
-                type="text"
-                placeholder="e.g. Bangalore"
-              />
+              <input v-model="suggestion.city" type="text" placeholder="Bangalore" />
             </label>
 
             <label>
-              <span>Meetup idea</span>
+              <span>Meetup name</span>
               <input
                 v-model="suggestion.title"
                 type="text"
-                placeholder="e.g. Weekend coding meetup"
+                placeholder="Saturday AI & Chai"
               />
             </label>
 
             <label>
               <span>Preferred date</span>
-              <input
-                v-model="suggestion.date"
-                type="date"
-              />
+              <input v-model="suggestion.date" type="date" />
             </label>
 
             <label class="full">
-              <span>Tell us more</span>
+              <span>Tell us about it</span>
               <textarea
                 v-model="suggestion.description"
                 rows="5"
-                placeholder="What should happen at this meetup?"
+                placeholder="What would people actually do at this meetup?"
               ></textarea>
             </label>
           </div>
 
-          <div class="suggest-form-footer">
-            <p>
-              You can submit your idea through the community form.
-            </p>
-
+          <div class="form-bottom">
+            <span>Ready? Send the idea to the community team.</span>
             <a
               href="https://forms.gle/iHeYQsAbsUTBHJJC6"
               target="_blank"
               rel="noopener noreferrer"
-              class="submit-btn"
+              class="dark-button"
             >
-              Submit Meetup Idea →
+              Submit idea →
             </a>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- PAST MEETUPS - HIDDEN UNTIL REQUESTED -->
-    <section class="section archive-section">
+    <!-- =========================================================
+         PAST EVENTS
+         ========================================================= -->
+    <section class="archive-section">
       <div class="container">
         <button
           type="button"
-          class="archive-toggle"
-          @click="showPastMeetups = !showPastMeetups"
+          class="archive-trigger"
+          @click="showPast = !showPast"
         >
-          <div>
-            <span class="section-tag">Archive</span>
-            <strong>
-              {{ showPastMeetups ? 'Hide past meetups' : 'Explore past meetups' }}
-            </strong>
-          </div>
-
-          <span class="archive-arrow" :class="{ open: showPastMeetups }">
-            ↓
+          <span>
+            <Archive :size="19" />
+            {{ showPast ? 'Hide past events' : 'See what already happened' }}
           </span>
+          <strong>{{ showPast ? '−' : '+' }}</strong>
         </button>
 
-        <!-- PAST RESULTS APPEAR DIRECTLY BELOW -->
-        <div v-if="showPastMeetups" class="archive-results">
-          <div class="archive-filter-row">
-            <span>
-              {{ filteredPastMeetups.length }} past
-              {{ filteredPastMeetups.length === 1 ? 'meetup' : 'meetups' }}
-            </span>
-
-            <span v-if="searchQuery">
-              filtered by “{{ searchQuery }}”
-            </span>
+        <div v-if="showPast" class="result-drawer archive-drawer">
+          <div class="drawer-heading">
+            <div>
+              <span class="mini-label">THE ARCHIVE</span>
+              <h2>Good things that happened.</h2>
+            </div>
+            <span>{{ filteredPast.length }} events</span>
           </div>
 
-          <div
-            v-if="filteredPastMeetups.length"
-            class="meetup-results-grid"
-          >
-            <article
-              v-for="meetup in filteredPastMeetups"
-              :key="meetup.key"
-              class="meetup-result-card"
-            >
-              <div class="result-card-top">
-                <span class="result-city">{{ meetup.city }}</span>
-
-                <span v-if="meetup.meetupNumber" class="result-number">
-                  {{ meetup.meetupNumber }}
-                </span>
-              </div>
-
-              <h4>{{ meetup.title }}</h4>
-
-              <div class="result-meta">
-                <span v-if="meetup.date">
-                  <Calendar :size="14" />
-                  {{ meetup.date }}
-                </span>
-
-                <span v-if="meetup.location">
-                  <MapPin :size="14" />
-                  {{ meetup.location }}
-                </span>
-              </div>
-
-              <p>{{ meetup.about }}</p>
-
-              <div v-if="meetup.tags?.length" class="result-tags">
-                <span v-for="tag in meetup.tags.slice(0, 4)" :key="tag">
-                  {{ tag }}
-                </span>
-              </div>
-
-              <a
-                v-if="meetup.instaUrl"
-                :href="meetup.instaUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="result-link"
-              >
-                View meetup →
-              </a>
-            </article>
-          </div>
-
-          <div v-else class="empty-result">
-            <Archive :size="28" />
-            <h4>No past meetups found</h4>
-            <p>Try changing your search.</p>
-          </div>
+          <MeetupResults
+            :items="filteredPast"
+            empty-title="No archived events found"
+            empty-text="Try clearing your search."
+          />
         </div>
       </div>
     </section>
-  </div>
+  </main>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, defineComponent, h, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Archive,
-  Calendar,
+  CalendarDays,
   Clock,
   Code2,
   Globe2,
   Lightbulb,
   MapPin,
+  Plus,
   Search,
+  Sparkles,
   Users,
   X,
 } from 'lucide-vue-next';
 
-import { useScrollReveal } from '../composables/useAnimations.js';
 import { regionConfigs } from './meetups/regionConfigs.js';
-
-useScrollReveal();
 
 const router = useRouter();
 
-const hoveredRegion = ref(null);
+const heroRef = ref(null);
+const searchSection = ref(null);
+const suggestionSection = ref(null);
+
 const searchQuery = ref('');
 const activeInterest = ref(null);
-const showSuggestionForm = ref(false);
-const showPastMeetups = ref(false);
+const showSuggestion = ref(false);
+const showPast = ref(false);
+
+const heroX = ref(0);
+const heroY = ref(0);
 
 const suggestion = ref({
   name: '',
@@ -588,35 +518,7 @@ const suggestion = ref({
   description: '',
 });
 
-/*
- * Existing city cards preserved.
- */
-const imgDelhi =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911362/sundarbans/src/assets/regions/delhi.jpg';
-
-const imgMumbai =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911367/sundarbans/src/assets/regions/mumbai.jpg';
-
-const imgBangalore =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911358/sundarbans/src/assets/regions/bangalore.jpg';
-
-const imgKolkata =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911364/sundarbans/src/assets/regions/kolkata.jpg';
-
-const imgHyderabad =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911363/sundarbans/src/assets/regions/hyderabad.jpg';
-
-const imgPatna =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911369/sundarbans/src/assets/regions/patna.jpg';
-
-const imgChandigarh =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911359/sundarbans/src/assets/regions/chandigarh.webp';
-
-const imgChennai =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911360/sundarbans/src/assets/regions/chennai.jpg';
-
-const imgLucknow =
-  'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit/v1785911366/sundarbans/src/assets/regions/lucknow.jpg';
+const imageBase = 'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit';
 
 const regions = [
   {
@@ -624,199 +526,268 @@ const regions = [
     configSlug: 'delhi',
     name: 'Delhi-NCR',
     members: '320+',
-    image: imgDelhi,
     badge: 'Most Active',
-    featured: true,
+    image: `${imageBase}/v1785911362/sundarbans/src/assets/regions/delhi.jpg`,
   },
   {
     slug: 'mumbai',
     configSlug: 'mumbai',
     name: 'Mumbai',
     members: '450+',
-    image: imgMumbai,
     badge: 'Largest Chapter',
+    image: `${imageBase}/v1785911367/sundarbans/src/assets/regions/mumbai.jpg`,
   },
   {
     slug: 'bangalore',
     configSlug: 'bangalore',
     name: 'Bangalore',
     members: '390+',
-    image: imgBangalore,
-    badge: null,
+    badge: '',
+    image: `${imageBase}/v1785911358/sundarbans/src/assets/regions/bangalore.jpg`,
   },
   {
     slug: 'kolkata',
     configSlug: 'kolkata',
     name: 'Kolkata',
     members: '280+',
-    image: imgKolkata,
-    badge: null,
+    badge: '',
+    image: `${imageBase}/v1785911364/sundarbans/src/assets/regions/kolkata.jpg`,
   },
   {
     slug: 'hyderabad',
     configSlug: 'hyderabad',
     name: 'Hyderabad',
     members: '210+',
-    image: imgHyderabad,
-    badge: null,
+    badge: '',
+    image: `${imageBase}/v1785911363/sundarbans/src/assets/regions/hyderabad.jpg`,
   },
   {
     slug: 'patna',
     configSlug: 'patna',
     name: 'Patna',
     members: '180+',
-    image: imgPatna,
-    badge: null,
+    badge: '',
+    image: `${imageBase}/v1785911369/sundarbans/src/assets/regions/patna.jpg`,
   },
   {
     slug: 'chandigarh',
     configSlug: 'chandigarh',
     name: 'Chandigarh',
     members: '120+',
-    image: imgChandigarh,
-    badge: 'Rising Chapter',
+    badge: 'Rising',
+    image: `${imageBase}/v1785911359/sundarbans/src/assets/regions/chandigarh.webp`,
   },
   {
     slug: 'chennai',
     configSlug: 'chennai',
     name: 'Chennai',
     members: '150+',
-    image: imgChennai,
-    badge: null,
+    badge: '',
+    image: `${imageBase}/v1785911360/sundarbans/src/assets/regions/chennai.jpg`,
   },
   {
     slug: 'lucknow',
     configSlug: 'lucknow',
     name: 'Lucknow',
     members: '110+',
-    image: imgLucknow,
-    badge: null,
+    badge: '',
+    image: `${imageBase}/v1785911366/sundarbans/src/assets/regions/lucknow.jpg`,
   },
 ];
 
 const interests = [
   {
     key: 'learn',
+    number: '01',
     label: 'Learn',
-    description: 'Study sessions, discussions, workshops and knowledge sharing.',
+    description: 'Study sessions, workshops, talks and knowledge sharing.',
     icon: Lightbulb,
   },
   {
     key: 'build',
+    number: '02',
     label: 'Build',
-    description: 'Projects, coding, technology, startups and collaboration.',
+    description: 'Coding, projects, startups, AI and making things.',
     icon: Code2,
   },
   {
     key: 'people',
+    number: '03',
     label: 'Meet People',
-    description: 'Connect with students, friends, peers and new members.',
+    description: 'Friends, networking, chai, conversations and connections.',
     icon: Users,
   },
   {
     key: 'community',
+    number: '04',
     label: 'Community',
-    description: 'Chapter activities, social gatherings and community events.',
+    description: 'Chapter events, social gatherings and shared experiences.',
     icon: Globe2,
   },
 ];
 
-function goToRegion(slug) {
-  router.push('/meetups/' + slug);
+const interestKeywords = {
+  learn: [
+    'learn', 'learning', 'study', 'education', 'academic', 'discussion',
+    'workshop', 'session', 'knowledge', 'exam', 'doubt', 'talk', 'lecture',
+  ],
+  build: [
+    'build', 'building', 'project', 'coding', 'code', 'developer',
+    'development', 'technology', 'tech', 'ai', 'data', 'startup', 'hack',
+    'product', 'programming', 'design',
+  ],
+  people: [
+    'network', 'networking', 'social', 'connect', 'connection', 'friends',
+    'meet', 'people', 'cafe', 'chai', 'hangout', 'gathering',
+  ],
+  community: [
+    'community', 'chapter', 'student', 'society', 'house', 'sundarbans',
+    'iitm', 'iit madras', 'meetup', 'event', 'collaboration', 'social',
+  ],
+};
+
+function firstValue(object, keys, fallback = '') {
+  for (const key of keys) {
+    const value = object?.[key];
+    if (value !== undefined && value !== null && value !== '') return value;
+  }
+  return fallback;
 }
 
-function toggleInterest(key) {
-  activeInterest.value =
-    activeInterest.value === key ? null : key;
+function toArray(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
 }
 
-const activeInterestLabel = computed(() => {
-  const item = interests.find(
-    (interest) => interest.key === activeInterest.value,
+function parseDateParts(dateValue) {
+  if (!dateValue) {
+    return { day: '', month: '' };
+  }
+
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return { day: '', month: '' };
+  }
+
+  return {
+    day: String(date.getDate()).padStart(2, '0'),
+    month: date.toLocaleString('en-IN', { month: 'short' }).toUpperCase(),
+  };
+}
+
+function normalizeMeetup(raw, city, type, key) {
+  const title = firstValue(
+    raw,
+    ['title', 'name', 'eventName', 'meetupName'],
+    `${city} Community Meetup`,
   );
 
-  return item?.label || '';
-});
+  const date = firstValue(raw, ['date', 'eventDate', 'meetupDate']);
+  const parts = parseDateParts(date);
 
-/*
- * Flatten the existing region data.
- *
- * regionConfigs already contains the normalized pastMeetups data
- * used by the individual city meetup pages.
- */
+  return {
+    ...raw,
+    key,
+    city,
+    type,
+    title,
+    date,
+    day: parts.day,
+    month: parts.month,
+    time: firstValue(raw, ['time', 'eventTime', 'meetupTime']),
+    location: firstValue(
+      raw,
+      ['location', 'venue', 'address1', 'address', 'place'],
+    ),
+    about: firstValue(
+      raw,
+      ['about', 'description', 'desc', 'details'],
+      'Community meetup.',
+    ),
+    meetupNumber: firstValue(
+      raw,
+      ['meetupNumber', 'number', 'id'],
+    ),
+    tags: toArray(firstValue(raw, ['tags', 'tag', 'topics'])),
+    mapsUrl: firstValue(raw, ['mapsUrl', 'googleMaps', 'mapUrl']),
+    instaUrl: firstValue(raw, ['instaUrl', 'instagram', 'instagramUrl']),
+  };
+}
+
 const allMeetups = computed(() => {
   const result = [];
 
-  Object.entries(regionConfigs).forEach(([cityKey, config]) => {
-    const city =
-      config.heroTitle ||
-      cityKey.charAt(0).toUpperCase() + cityKey.slice(1);
+  Object.entries(regionConfigs || {}).forEach(([cityKey, config]) => {
+    const city = firstValue(
+      config,
+      ['cityName', 'heroTitle', 'name', 'title'],
+      cityKey.charAt(0).toUpperCase() + cityKey.slice(1),
+    );
 
-    if (config.upcoming) {
-      result.push({
-        ...config.upcoming,
-        key: `${cityKey}-upcoming`,
-        city,
-        type: 'upcoming',
-        title: config.upcoming.name || `${city} Meetup`,
-        location:
-          config.upcoming.venue ||
-          config.upcoming.address1 ||
-          '',
-        about:
-          config.upcoming.about ||
-          'Upcoming community meetup.',
-        tags: config.upcoming.tags || [],
-      });
+    const upcoming = firstValue(config, ['upcoming', 'nextMeetup'], null);
+
+    if (upcoming && typeof upcoming === 'object') {
+      result.push(
+        normalizeMeetup(
+          upcoming,
+          city,
+          'upcoming',
+          `${cityKey}-upcoming`,
+        ),
+      );
     }
 
-    (config.pastMeetups || []).forEach((meetup) => {
-      result.push({
-        ...meetup,
-        key: `${cityKey}-${meetup.id}`,
-        city,
-        type: 'past',
+    const past = firstValue(config, ['pastMeetups', 'past', 'events'], []);
+
+    if (Array.isArray(past)) {
+      past.forEach((item, index) => {
+        result.push(
+          normalizeMeetup(
+            item,
+            city,
+            'past',
+            `${cityKey}-past-${item?.id || index}`,
+          ),
+        );
       });
-    });
+    }
   });
 
   return result;
 });
 
 const upcomingMeetups = computed(() =>
-  allMeetups.value.filter((meetup) => meetup.type === 'upcoming'),
+  allMeetups.value.filter((item) => item.type === 'upcoming'),
 );
 
 const pastMeetups = computed(() =>
-  allMeetups.value.filter((meetup) => meetup.type === 'past'),
+  allMeetups.value.filter((item) => item.type === 'past'),
 );
 
-/*
- * Search is intentionally flexible.
- *
- * Example:
- *   bangalore       -> Bangalore results
- *   tech            -> technology-related results
- *   cafe            -> cafe/venue results
- *   bangalore tech  -> results matching BOTH words
- */
-function searchableText(meetup) {
+function searchableText(item) {
   return [
-    meetup.city,
-    meetup.title,
-    meetup.location,
-    meetup.about,
-    meetup.date,
-    meetup.time,
-    meetup.meetupNumber,
-    ...(meetup.tags || []),
+    item.city,
+    item.title,
+    item.location,
+    item.about,
+    item.date,
+    item.time,
+    item.meetupNumber,
+    ...(item.tags || []),
   ]
     .filter(Boolean)
     .join(' ')
     .toLowerCase();
 }
 
-function matchesSearch(meetup, query) {
+function matchesSearch(item, query) {
   const terms = query
     .toLowerCase()
     .trim()
@@ -825,738 +796,1513 @@ function matchesSearch(meetup, query) {
 
   if (!terms.length) return true;
 
-  const text = searchableText(meetup);
-
+  const text = searchableText(item);
   return terms.every((term) => text.includes(term));
 }
 
-const filteredSearchResults = computed(() => {
+const searchResults = computed(() => {
   if (!searchQuery.value.trim()) return [];
 
   return allMeetups.value
-    .filter((meetup) => matchesSearch(meetup, searchQuery.value))
-    .slice(0, 24);
+    .filter((item) => matchesSearch(item, searchQuery.value))
+    .slice(0, 30);
 });
 
-/*
- * Interest filtering uses the actual meetup title,
- * description and tags rather than fake hard-coded events.
- */
-const interestKeywords = {
-  learn: [
-    'learn',
-    'learning',
-    'study',
-    'education',
-    'academic',
-    'discussion',
-    'workshop',
-    'session',
-    'knowledge',
-    'exam',
-    'doubt',
-    'talk',
-    'lecture',
-  ],
+const filteredPast = computed(() => {
+  if (!searchQuery.value.trim()) return pastMeetups.value;
+  return pastMeetups.value.filter((item) =>
+    matchesSearch(item, searchQuery.value),
+  );
+});
 
-  build: [
-    'build',
-    'building',
-    'project',
-    'coding',
-    'code',
-    'developer',
-    'development',
-    'technology',
-    'tech',
-    'ai',
-    'data',
-    'startup',
-    'hack',
-    'product',
-    'programming',
-  ],
+const filteredRegions = computed(() => {
+  if (!searchQuery.value.trim()) return regions;
 
-  people: [
-    'network',
-    'networking',
-    'social',
-    'connect',
-    'connection',
-    'friends',
-    'meet',
-    'people',
-    'cafe',
-    'hangout',
-    'gathering',
-  ],
+  const terms = searchQuery.value
+    .toLowerCase()
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
 
-  community: [
-    'community',
-    'chapter',
-    'student',
-    'society',
-    'house',
-    'sundarbans',
-    'iitm',
-    'iit madras',
-    'meetup',
-    'event',
-    'collaboration',
-  ],
-};
+  return regions.filter((region) => {
+    const cityMeetups = allMeetups.value.filter(
+      (item) =>
+        item.city.toLowerCase().includes(region.name.toLowerCase()) ||
+        item.city.toLowerCase().includes(region.configSlug),
+    );
 
-function matchesInterest(meetup, interest) {
-  const keywords = interestKeywords[interest] || [];
-  const text = searchableText(meetup);
+    const text = [
+      region.name,
+      region.slug,
+      region.members,
+      ...cityMeetups.map(searchableText),
+    ]
+      .join(' ')
+      .toLowerCase();
 
-  return keywords.some((keyword) => text.includes(keyword));
-}
+    return terms.every((term) => text.includes(term));
+  });
+});
+
+const activeInterestLabel = computed(() => {
+  return (
+    interests.find((item) => item.key === activeInterest.value)?.label || ''
+  );
+});
 
 const interestResults = computed(() => {
   if (!activeInterest.value) return [];
 
-  let results = allMeetups.value.filter((meetup) =>
-    matchesInterest(meetup, activeInterest.value),
-  );
+  const keywords = interestKeywords[activeInterest.value] || [];
 
-  /*
-   * If a search is also active, apply it here.
-   * This means:
-   * Learn + Bangalore
-   * gives Learn meetups in Bangalore.
-   */
-  if (searchQuery.value.trim()) {
-    results = results.filter((meetup) =>
-      matchesSearch(meetup, searchQuery.value),
-    );
-  }
-
-  return results.slice(0, 24);
-});
-
-const filteredPastMeetups = computed(() => {
-  if (!searchQuery.value.trim()) {
-    return pastMeetups.value;
-  }
-
-  return pastMeetups.value.filter((meetup) =>
-    matchesSearch(meetup, searchQuery.value),
-  );
-});
-
-const visibleRegions = computed(() => {
-  const query = searchQuery.value.trim().toLowerCase();
-
-  if (!query) return regions;
-
-  const terms = query.split(/\s+/).filter(Boolean);
-
-  return regions.filter((region) => {
-    const regionMeetups = allMeetups.value.filter(
-      (meetup) =>
-        meetup.city.toLowerCase().includes(region.name.toLowerCase()) ||
-        meetup.city.toLowerCase().includes(region.configSlug),
-    );
-
-    const regionText = [
-      region.name,
-      region.slug,
-      region.members,
-      ...regionMeetups.flatMap((meetup) => [
-        meetup.title,
-        meetup.location,
-        meetup.about,
-        ...(meetup.tags || []),
-      ]),
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase();
-
-    return terms.every((term) => regionText.includes(term));
+  let results = allMeetups.value.filter((item) => {
+    const text = searchableText(item);
+    return keywords.some((keyword) => text.includes(keyword));
   });
+
+  if (searchQuery.value.trim()) {
+    results = results.filter((item) =>
+      matchesSearch(item, searchQuery.value),
+    );
+  }
+
+  return results.slice(0, 30);
+});
+
+function toggleInterest(key) {
+  activeInterest.value =
+    activeInterest.value === key ? null : key;
+}
+
+function setSearch(value) {
+  searchQuery.value = value;
+  activeInterest.value = null;
+}
+
+function goToRegion(slug) {
+  router.push(`/meetups/${slug}`);
+}
+
+function focusSearch() {
+  searchSection.value?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'center',
+  });
+
+  requestAnimationFrame(() => {
+    const input = searchSection.value?.querySelector('input');
+    input?.focus();
+  });
+}
+
+function toggleSuggestion() {
+  showSuggestion.value = !showSuggestion.value;
+
+  if (showSuggestion.value) {
+    requestAnimationFrame(() => {
+      suggestionSection.value?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    });
+  }
+}
+
+function handleHeroMove(event) {
+  const rect = heroRef.value?.getBoundingClientRect();
+
+  if (!rect) return;
+
+  const x = (event.clientX - rect.left) / rect.width - 0.5;
+  const y = (event.clientY - rect.top) / rect.height - 0.5;
+
+  heroX.value = x * 10;
+  heroY.value = y * -10;
+}
+
+function resetHero() {
+  heroX.value = 0;
+  heroY.value = 0;
+}
+
+const heroTransform = computed(() => ({
+  transform: `rotateY(${heroX.value}deg) rotateX(${heroY.value}deg)`,
+}));
+
+/*
+ * Small local component keeps every result card identical.
+ * No extra component file is required.
+ */
+const MeetupResults = defineComponent({
+  name: 'MeetupResults',
+  props: {
+    items: {
+      type: Array,
+      default: () => [],
+    },
+    emptyTitle: {
+      type: String,
+      default: 'Nothing found',
+    },
+    emptyText: {
+      type: String,
+      default: 'Try another search.',
+    },
+  },
+  setup(props) {
+    return () =>
+      props.items.length
+        ? h(
+            'div',
+            { class: 'result-grid' },
+            props.items.map((item) =>
+              h(
+                'article',
+                {
+                  key: item.key,
+                  class: 'mini-event-card',
+                },
+                [
+                  h(
+                    'div',
+                    { class: 'mini-event-top' },
+                    [
+                      h('span', { class: 'mini-event-city' }, item.city),
+                      item.type === 'upcoming'
+                        ? h(
+                            'span',
+                            { class: 'upcoming-chip' },
+                            'UPCOMING',
+                          )
+                        : h(
+                            'span',
+                            { class: 'past-chip' },
+                            'PAST',
+                          ),
+                    ],
+                  ),
+
+                  h('h3', item.title),
+
+                  h(
+                    'div',
+                    { class: 'mini-event-meta' },
+                    [
+                      item.date
+                        ? h(
+                            'span',
+                            {},
+                            [
+                              h(CalendarDays, { size: 14 }),
+                              item.date,
+                            ],
+                          )
+                        : null,
+
+                      item.location
+                        ? h(
+                            'span',
+                            {},
+                            [
+                              h(MapPin, { size: 14 }),
+                              item.location,
+                            ],
+                          )
+                        : null,
+                    ].filter(Boolean),
+                  ),
+
+                  h('p', item.about),
+
+                  item.tags?.length
+                    ? h(
+                        'div',
+                        { class: 'mini-tags' },
+                        item.tags.slice(0, 4).map((tag) =>
+                          h('span', { key: tag }, tag),
+                        ),
+                      )
+                    : null,
+
+                  item.mapsUrl || item.instaUrl
+                    ? h(
+                        'div',
+                        { class: 'mini-event-links' },
+                        [
+                          item.mapsUrl
+                            ? h(
+                                'a',
+                                {
+                                  href: item.mapsUrl,
+                                  target: '_blank',
+                                  rel: 'noopener noreferrer',
+                                },
+                                'Location →',
+                              )
+                            : null,
+
+                          item.instaUrl
+                            ? h(
+                                'a',
+                                {
+                                  href: item.instaUrl,
+                                  target: '_blank',
+                                  rel: 'noopener noreferrer',
+                                },
+                                'Details →',
+                              )
+                            : null,
+                        ].filter(Boolean),
+                      )
+                    : null,
+                ],
+              ),
+            ),
+          )
+        : h(
+            'div',
+            { class: 'result-empty' },
+            [
+              h('div', { class: 'empty-star' }, '✦'),
+              h('h3', props.emptyTitle),
+              h('p', props.emptyText),
+            ],
+          );
+  },
+});
+
+let resizeHandler;
+
+onMounted(() => {
+  resizeHandler = () => {
+    if (window.innerWidth < 700) resetHero();
+  };
+
+  window.addEventListener('resize', resizeHandler);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', resizeHandler);
 });
 </script>
 
 <style scoped>
-/* =========================
-   COMPACT INTRO
-========================= */
+/* =========================================================
+   BASE
+   ========================================================= */
 
-.meetups-intro {
-  padding: 110px 0 42px;
-  border-bottom: 1px solid var(--border);
+.meetups-page {
+  --ink: #171717;
+  --paper: #f5f0e6;
+  --paper-2: #ebe4d6;
+  --yellow: #f6c945;
+  --pink: #ff7c91;
+  --blue: #71b8ff;
+  --green: #9edc79;
+  --purple: #9c8cff;
+  --muted: #706d66;
+  --line: rgba(23, 23, 23, 0.14);
+  min-height: 100vh;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
 }
 
-.intro-title {
-  margin: 10px 0 12px;
+.meetups-page button,
+.meetups-page input,
+.meetups-page textarea {
+  font: inherit;
+}
+
+.container {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.section {
+  padding: 105px 0;
+}
+
+.mini-label {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.section-heading.centered {
+  display: block;
+  text-align: center;
+}
+
+.section-heading h2 {
+  margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(2.5rem, 5vw, 4.5rem);
-  line-height: 1;
+  font-size: clamp(2.4rem, 5vw, 4.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+}
+
+.section-heading h2 span {
+  position: relative;
+  display: inline-block;
+}
+
+.section-heading h2 span::after {
+  position: absolute;
+  left: 2%;
+  right: -4%;
+  bottom: -7px;
+  height: 8px;
+  content: "";
+  border-radius: 50%;
+  background: var(--yellow);
+  transform: rotate(-2deg);
+  z-index: -1;
+}
+
+.section-heading p {
+  max-width: 360px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.event-hero {
+  position: relative;
+  min-height: 690px;
+  overflow: hidden;
+  background: var(--yellow);
+  border-bottom: 2px solid var(--ink);
+  isolation: isolate;
+}
+
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.16;
+  background-image:
+    linear-gradient(var(--ink) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ink) 1px, transparent 1px);
+  background-size: 48px 48px;
+  transform: perspective(500px) rotateX(55deg) scale(1.6) translateY(30%);
+  transform-origin: bottom;
+}
+
+.hero-sun {
+  position: absolute;
+  width: 460px;
+  height: 460px;
+  right: -80px;
+  top: -150px;
+  border-radius: 50%;
+  background: var(--pink);
+  border: 2px solid var(--ink);
+  z-index: -1;
+}
+
+.hero-cloud {
+  position: absolute;
+  width: 130px;
+  height: 45px;
+  border: 2px solid var(--ink);
+  border-radius: 100px;
+  background: #fff;
+  opacity: 0.8;
+}
+
+.hero-cloud::before,
+.hero-cloud::after {
+  position: absolute;
+  content: "";
+  border: 2px solid var(--ink);
+  border-bottom: 0;
+  border-radius: 100px 100px 0 0;
+  background: inherit;
+}
+
+.hero-cloud::before {
+  width: 45px;
+  height: 35px;
+  left: 22px;
+  bottom: 20px;
+}
+
+.hero-cloud::after {
+  width: 55px;
+  height: 43px;
+  right: 22px;
+  bottom: 20px;
+}
+
+.cloud-one {
+  left: 7%;
+  top: 13%;
+  transform: scale(0.75);
+}
+
+.cloud-two {
+  left: 47%;
+  top: 7%;
+  transform: scale(0.45);
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: center;
+  min-height: 620px;
+  gap: 40px;
+}
+
+.hero-copy {
+  padding: 65px 0 100px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 8px 13px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #55b94a;
+  border: 1px solid var(--ink);
+}
+
+.hero-copy h1 {
+  max-width: 750px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(4.3rem, 8vw, 8.4rem);
+  line-height: 0.82;
+  letter-spacing: -0.07em;
+}
+
+.scribble-word {
+  position: relative;
+  display: inline-block;
+}
+
+.scribble-word::after {
+  position: absolute;
+  left: -3%;
+  right: -4%;
+  bottom: -4px;
+  height: 18px;
+  content: "";
+  border-top: 6px solid var(--pink);
+  border-radius: 50%;
+  transform: rotate(-2deg);
+}
+
+.hero-highlight {
+  color: #fff;
+  -webkit-text-stroke: 2px var(--ink);
+  text-shadow: 7px 7px 0 var(--ink);
+}
+
+.hero-copy > p {
+  max-width: 570px;
+  margin: 35px 0 25px;
+  font-size: 1.02rem;
+  line-height: 1.7;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hero-button,
+.dark-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hero-button:hover,
+.dark-button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.hero-button.primary {
+  background: var(--ink);
+  color: #fff;
+}
+
+.hero-button.secondary {
+  background: #fff;
+  color: var(--ink);
+}
+
+.hero-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 550px;
+  margin-top: 20px;
+  color: rgba(23, 23, 23, 0.65);
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
-.intro-sub {
-  max-width: 650px;
-  color: var(--text2);
-  line-height: 1.7;
-  font-size: 1rem;
+.hero-stage {
+  position: relative;
+  height: 540px;
+  perspective: 1200px;
 }
 
-/* =========================
+.event-ticket {
+  position: absolute;
+  width: min(370px, 70%);
+  aspect-ratio: 0.7;
+  top: 50%;
+  left: 50%;
+  padding: 28px;
+  border: 3px solid var(--ink);
+  border-radius: 25px;
+  background: var(--blue);
+  box-shadow: 15px 18px 0 var(--ink);
+  transform-style: preserve-3d;
+  transform-origin: center;
+  transition: transform 0.12s ease-out;
+}
+
+.event-ticket::before {
+  position: absolute;
+  inset: 12px;
+  content: "";
+  border: 2px dashed var(--ink);
+  border-radius: 17px;
+  pointer-events: none;
+}
+
+.ticket-hole {
+  position: absolute;
+  width: 27px;
+  height: 27px;
+  top: 48%;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--yellow);
+  transform: translateY(-50%);
+}
+
+.hole-one {
+  left: -16px;
+}
+
+.hole-two {
+  right: -16px;
+}
+
+.ticket-top {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.ticket-mark {
+  font-size: 1.7rem;
+}
+
+.ticket-title {
+  position: relative;
+  margin-top: 80px;
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 5vw, 4.4rem);
+  line-height: 0.8;
+  letter-spacing: -0.06em;
+}
+
+.ticket-meta {
+  position: absolute;
+  bottom: 82px;
+  left: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 210px;
+}
+
+.ticket-meta span {
+  padding: 5px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.6rem;
+  font-weight: 900;
+}
+
+.ticket-barcode {
+  position: absolute;
+  right: 28px;
+  bottom: 27px;
+  display: flex;
+  align-items: stretch;
+  height: 38px;
+  gap: 3px;
+}
+
+.ticket-barcode i {
+  width: 3px;
+  background: var(--ink);
+}
+
+.ticket-barcode i:nth-child(2n) {
+  width: 6px;
+}
+
+.floating-doodle,
+.floating-label {
+  position: absolute;
+  z-index: 3;
+  font-weight: 900;
+}
+
+.doodle-smile {
+  top: 17%;
+  left: 5%;
+  font-size: 5rem;
+  transform: rotate(-12deg);
+}
+
+.doodle-star {
+  top: 20%;
+  right: 5%;
+  color: var(--pink);
+  font-size: 4rem;
+  -webkit-text-stroke: 2px var(--ink);
+}
+
+.doodle-arrow {
+  bottom: 15%;
+  left: 3%;
+  font-size: 4rem;
+  transform: rotate(-20deg);
+}
+
+.floating-label {
+  padding: 9px 12px;
+  border: 2px solid var(--ink);
+  background: #fff;
+  font-size: 0.65rem;
+  line-height: 1;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.label-one {
+  right: 0;
+  top: 44%;
+  transform: rotate(7deg);
+}
+
+.label-two {
+  left: 12%;
+  bottom: 13%;
+  transform: rotate(-7deg);
+}
+
+.hero-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  border-top: 2px solid var(--ink);
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.hero-bottom-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.scroll-line {
+  flex: 1;
+  height: 1px;
+  margin: 0 20px;
+  background: var(--ink);
+}
+
+/* =========================================================
    SEARCH
-========================= */
+   ========================================================= */
 
 .search-section {
-  padding: 30px 0 10px;
+  position: relative;
+  z-index: 10;
+  padding: 35px 0 20px;
+  background: var(--paper);
 }
 
-.search-box {
-  width: 100%;
-  min-height: 58px;
+.search-wrap {
   display: flex;
   align-items: center;
   gap: 14px;
+  min-height: 72px;
   padding: 0 18px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--rad2);
-  color: var(--text2);
-  transition: border-color 0.25s, box-shadow 0.25s;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 6px 6px 0 var(--ink);
 }
 
-.search-box:focus-within {
-  border-color: var(--border-gold);
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
+.search-icon {
+  display: grid;
+  place-items: center;
 }
 
-.search-box input {
-  width: 100%;
+.search-wrap input {
+  min-width: 0;
+  flex: 1;
   border: 0;
   outline: 0;
   background: transparent;
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 0.95rem;
+  color: var(--ink);
+  font-size: 1rem;
 }
 
-.search-box input::placeholder {
-  color: var(--text2);
+.search-count {
+  white-space: nowrap;
+  font-size: 0.7rem;
+  font-weight: 900;
 }
 
-.clear-search {
-  width: 32px;
-  height: 32px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--surface2);
-  color: var(--text2);
+.icon-button {
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--paper-2);
   cursor: pointer;
 }
 
-/* =========================
-   INLINE RESULTS
-========================= */
-
-.inline-results,
-.interest-results {
-  margin-top: 18px;
-  padding: 24px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--rad2);
+.search-examples {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 13px;
+  color: var(--muted);
+  font-size: 0.72rem;
 }
 
-.result-header {
+.search-examples button {
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.search-examples button:hover {
+  background: var(--yellow);
+  border-color: var(--ink);
+}
+
+/* =========================================================
+   RESULT DRAWERS
+   ========================================================= */
+
+.result-drawer {
+  margin-top: 22px;
+  padding: 28px;
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 7px 7px 0 var(--ink);
+}
+
+.drawer-heading {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
-.result-header h3 {
-  margin-top: 6px;
+.drawer-heading h2 {
+  margin: 0;
   font-family: var(--font-display);
-  font-size: 1.45rem;
-  color: var(--text);
+  font-size: 2rem;
 }
 
-.result-query {
-  color: var(--accent);
-  font-size: 0.85rem;
+.query-pill {
+  padding: 7px 12px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: var(--yellow);
+  font-size: 0.75rem;
+  font-weight: 900;
 }
 
-.meetup-results-grid {
+.result-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
 
-.meetup-result-card {
+.mini-event-card {
   padding: 20px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--rad2);
-  transition: transform 0.25s, border-color 0.25s;
+  border: 2px solid var(--ink);
+  border-radius: 15px;
+  background: var(--paper);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.meetup-result-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--border-card);
+.mini-event-card:hover {
+  transform: translate(-3px, -3px) rotate(-0.4deg);
+  box-shadow: 5px 5px 0 var(--ink);
 }
 
-.result-card-top,
-.upcoming-small-top {
+.mini-event-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 8px;
+  margin-bottom: 15px;
 }
 
-.result-city {
-  color: var(--accent);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+.mini-event-city {
+  font-size: 0.68rem;
+  font-weight: 900;
   text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-.result-number {
-  color: var(--text2);
-  font-size: 0.72rem;
+.upcoming-chip,
+.past-chip {
+  padding: 4px 7px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  font-size: 0.55rem;
+  font-weight: 900;
 }
 
-.meetup-result-card h4 {
-  margin-bottom: 12px;
-  color: var(--text);
+.upcoming-chip {
+  background: var(--green);
+}
+
+.past-chip {
+  background: var(--paper-2);
+}
+
+.mini-event-card h3 {
+  margin: 0 0 12px;
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: 1.35rem;
+  line-height: 1;
 }
 
-.meetup-result-card p {
-  margin: 14px 0;
-  color: var(--text2);
-  line-height: 1.6;
-  font-size: 0.85rem;
-}
-
-.result-meta {
+.mini-event-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.result-meta span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--text2);
-  font-size: 0.75rem;
-}
-
-.result-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.result-tags span {
-  padding: 4px 8px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  color: var(--text2);
+  color: var(--muted);
   font-size: 0.7rem;
 }
 
-.result-link {
-  display: inline-block;
-  margin-top: 15px;
-  color: var(--accent);
+.mini-event-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mini-event-card > p {
+  margin: 14px 0;
+  color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 600;
-  text-decoration: none;
+  line-height: 1.55;
 }
 
-.result-link:hover {
-  color: var(--gold-light);
+.mini-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
-.empty-result,
-.city-empty {
-  padding: 35px 20px;
+.mini-tags span {
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: #fff;
+  font-size: 0.62rem;
+}
+
+.mini-event-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.mini-event-links a {
+  color: var(--ink);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.result-empty {
+  padding: 35px 10px 10px;
   text-align: center;
-  color: var(--text2);
 }
 
-.empty-result svg,
-.city-empty svg {
-  margin-bottom: 12px;
-  color: var(--accent);
+.empty-star {
+  font-size: 2rem;
+  margin-bottom: 5px;
 }
 
-.empty-result h4,
-.city-empty h3 {
-  color: var(--text);
-  margin-bottom: 6px;
+.result-empty h3 {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
 }
 
-/* =========================
-   CITY CARDS
-   Existing visual style
-========================= */
-
-.city-section {
-  padding-top: 55px;
+.result-empty p {
+  margin: 0;
+  color: var(--muted);
 }
 
-.regions-grid {
+/* =========================================================
+   CITIES
+   ========================================================= */
+
+.cities-section {
+  background: var(--paper);
+}
+
+.city-mosaic {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-auto-rows: 210px;
+  gap: 14px;
 }
 
-.region-card {
+.city-card {
   position: relative;
-  border-radius: var(--rad2);
+  min-width: 0;
   overflow: hidden;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 20px;
+  background: var(--ink);
   cursor: pointer;
-  aspect-ratio: 3 / 4;
-  border: 1px solid var(--border);
-  transition:
-    border-color 0.3s,
-    transform 0.35s,
-    box-shadow 0.35s;
+  text-align: left;
+  box-shadow: 5px 5px 0 var(--ink);
+  transition: transform 0.25s, box-shadow 0.25s;
 }
 
-.region-card:hover {
-  border-color: var(--border-gold);
-  transform: translateY(-4px);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+.city-card:hover {
+  transform: translate(-3px, -5px) rotate(-0.5deg);
+  box-shadow: 9px 10px 0 var(--ink);
 }
 
-.region-card.featured {
-  border-color: var(--border-card);
-}
-
-.region-bg {
+.city-card img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition:
-    transform 0.6s ease,
-    filter 0.4s;
-  filter: saturate(0.8) brightness(0.75);
+  transition: transform 0.5s;
 }
 
-.region-card:hover .region-bg {
-  transform: scale(1.06);
-  filter: saturate(1) brightness(0.85);
+.city-card:hover img {
+  transform: scale(1.08);
 }
 
-.region-overlay {
+.city-large {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.city-tall {
+  grid-row: span 2;
+}
+
+.city-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(5, 6, 5, 0.88) 0%,
-    rgba(5, 6, 5, 0.3) 50%,
-    transparent 80%
-  );
+  background:
+    linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.05) 70%),
+    linear-gradient(120deg, rgba(0, 0, 0, 0.35), transparent 55%);
 }
 
-.region-gold-tint {
+.city-badge {
   position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 80% 60% at 50% 100%,
-    rgba(213, 166, 58, 0.12) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
-}
-
-.region-content {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 20px;
-}
-
-.region-top {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.region-badge {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  top: 15px;
+  left: 15px;
+  padding: 6px 9px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--ink);
+  font-size: 0.58rem;
+  font-weight: 900;
   text-transform: uppercase;
-  color: var(--accent2);
-  background: rgba(213, 166, 58, 0.12);
-  backdrop-filter: blur(4px);
-  border: 1px solid var(--border-gold);
-  padding: 5px 12px;
-  border-radius: 100px;
 }
 
-.region-bottom {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.city-doodle {
+  position: absolute;
+  right: 16px;
+  top: 13px;
+  color: #fff;
+  font-size: 2rem;
+  text-shadow: 3px 3px 0 var(--ink);
 }
 
-.region-name {
+.city-info {
+  position: absolute;
+  right: 18px;
+  left: 18px;
+  bottom: 18px;
+  color: #fff;
+}
+
+.city-info span,
+.city-info small {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  opacity: 0.82;
+}
+
+.city-info strong {
+  display: block;
+  margin: 4px 0;
   font-family: var(--font-display);
-  font-size: clamp(20px, 2vw, 26px);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: #ffffff;
-  line-height: 1.1;
+  font-size: clamp(1.8rem, 3.2vw, 3.4rem);
+  line-height: 0.9;
 }
 
-.region-members {
-  font-size: 14px;
-  color: var(--text2);
+.simple-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 7px;
+  min-height: 220px;
+  border: 2px dashed var(--ink);
+  border-radius: 18px;
 }
 
-/* =========================
+/* =========================================================
    INTERESTS
-========================= */
+   ========================================================= */
 
-.interest-section {
-  background: var(--bg2);
+.interests-section {
+  background: var(--blue);
+  border-top: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
 }
 
-.interest-grid {
+.interest-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  gap: 12px;
 }
 
 .interest-card {
   position: relative;
-  min-height: 150px;
+  min-height: 245px;
   padding: 22px;
+  border: 2px solid var(--ink);
+  border-radius: 17px;
+  background: #fff;
   text-align: left;
-  border: 1px solid var(--border);
-  border-radius: var(--rad2);
-  background: var(--surface);
-  color: var(--text);
   cursor: pointer;
-  transition:
-    transform 0.25s,
-    border-color 0.25s,
-    background 0.25s;
+  box-shadow: 5px 5px 0 var(--ink);
+  transition: transform 0.22s, box-shadow 0.22s;
 }
 
 .interest-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--border-card);
+  transform: translate(-3px, -4px) rotate(-0.6deg);
+  box-shadow: 8px 9px 0 var(--ink);
 }
 
-.interest-card.active {
-  border-color: var(--accent);
-  background: rgba(213, 166, 58, 0.07);
+.interest-card.selected {
+  background: var(--yellow);
+  transform: translate(-3px, -4px);
+  box-shadow: 8px 9px 0 var(--ink);
+}
+
+.interest-number {
+  position: absolute;
+  top: 15px;
+  right: 17px;
+  font-size: 0.65rem;
+  font-weight: 900;
 }
 
 .interest-icon {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
-  margin-bottom: 18px;
-  color: var(--accent);
-  background: rgba(213, 166, 58, 0.08);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  margin-bottom: 38px;
+  border: 2px solid var(--ink);
+  border-radius: 13px;
+  background: var(--paper);
 }
 
-.interest-card h3 {
+.interest-card strong {
+  display: block;
   font-family: var(--font-display);
-  font-size: 1.05rem;
-  margin-bottom: 7px;
+  font-size: 1.45rem;
 }
 
 .interest-card p {
-  color: var(--text2);
-  font-size: 0.78rem;
-  line-height: 1.55;
-  max-width: 230px;
+  max-width: 220px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
 }
 
 .interest-arrow {
   position: absolute;
   right: 18px;
-  top: 18px;
-  color: var(--text2);
+  bottom: 16px;
+  font-size: 1.3rem;
+  font-weight: 900;
 }
 
-/* =========================
-   UPCOMING
-========================= */
-
-.upcoming-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+.interest-drawer {
+  margin-top: 28px;
+  background: var(--paper);
 }
 
-.upcoming-card-small {
-  padding: 26px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--rad2);
-}
-
-.upcoming-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--accent);
+.text-button {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
   font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  font-weight: 900;
+  cursor: pointer;
 }
 
-.upcoming-badge span {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
+/* =========================================================
+   UPCOMING
+   ========================================================= */
+
+.upcoming-section {
+  background: var(--paper);
 }
 
-.upcoming-card-small h3 {
-  margin-bottom: 16px;
+.event-board {
+  display: grid;
+  gap: 12px;
+}
+
+.event-card {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  align-items: center;
+  gap: 24px;
+  padding: 20px;
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.event-card:nth-child(2n) {
+  background: var(--green);
+}
+
+.event-card:nth-child(3n) {
+  background: var(--pink);
+}
+
+.event-date {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 92px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--yellow);
+}
+
+.event-date span {
+  font-size: 0.6rem;
+  font-weight: 900;
+}
+
+.event-date strong {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 2.6rem;
+  line-height: 0.9;
 }
 
-.upcoming-details {
+.event-topline {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 6px;
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.event-topline span:last-child {
+  color: var(--muted);
+}
+
+.event-main h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+}
+
+.event-main p {
+  max-width: 700px;
+  margin: 8px 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.event-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 15px;
+  gap: 13px;
+  color: var(--muted);
+  font-size: 0.7rem;
 }
 
-.upcoming-details div {
-  display: flex;
+.event-meta span {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  color: var(--text2);
-  font-size: 0.78rem;
+  gap: 5px;
 }
 
-.upcoming-card-small > p {
-  color: var(--text2);
-  line-height: 1.65;
-  font-size: 0.85rem;
+.event-go {
+  padding: 10px 15px;
+  border: 2px solid var(--ink);
+  border-radius: 9px;
+  color: var(--ink);
+  background: #fff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-decoration: none;
 }
 
-/* =========================
-   SUGGEST
-========================= */
-
-.suggest-section {
-  padding-top: 30px;
+.empty-board {
+  padding: 60px 20px;
+  border: 2px dashed var(--ink);
+  border-radius: 18px;
+  text-align: center;
 }
 
-.suggest-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 30px;
-  padding: 42px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--rad2);
+.empty-face {
+  font-size: 3rem;
+  margin-bottom: 8px;
 }
 
-.suggest-content h2 {
-  margin: 7px 0 10px;
+.empty-board h3 {
+  margin: 0 0 7px;
   font-family: var(--font-display);
   font-size: 2rem;
 }
 
-.suggest-content p {
-  max-width: 650px;
-  color: var(--text2);
+.empty-board p {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
+/* =========================================================
+   SUGGESTION
+   ========================================================= */
+
+.suggestion-section {
+  padding-top: 35px;
+  background: var(--paper-2);
+}
+
+.suggest-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  align-items: center;
+  min-height: 420px;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 25px;
+  background: var(--pink);
+  box-shadow: 9px 9px 0 var(--ink);
+}
+
+.suggest-art {
+  position: relative;
+  height: 100%;
+  min-height: 420px;
+  overflow: hidden;
+  border-right: 2px solid var(--ink);
+  background: var(--yellow);
+}
+
+.suggest-face {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  left: 50%;
+  top: 50%;
+  border: 4px solid var(--ink);
+  border-radius: 45% 55% 48% 52%;
+  background: #fff;
+  transform: translate(-50%, -50%) rotate(-7deg);
+  box-shadow: 9px 9px 0 var(--ink);
+}
+
+.suggest-face span {
+  position: absolute;
+  width: 15px;
+  height: 23px;
+  top: 60px;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.suggest-face span:first-child {
+  left: 50px;
+}
+
+.suggest-face span:nth-child(2) {
+  right: 50px;
+}
+
+.suggest-face i {
+  position: absolute;
+  width: 65px;
+  height: 30px;
+  left: 50%;
+  bottom: 43px;
+  border-bottom: 4px solid var(--ink);
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.speech {
+  position: absolute;
+  padding: 9px 13px;
+  border: 2px solid var(--ink);
+  background: #fff;
+  font-size: 0.7rem;
+  font-weight: 900;
+  line-height: 0.9;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.speech-one {
+  left: 15%;
+  top: 18%;
+  transform: rotate(-10deg);
+}
+
+.speech-two {
+  right: 8%;
+  bottom: 18%;
+  transform: rotate(7deg);
+}
+
+.suggest-copy {
+  padding: 50px;
+}
+
+.suggest-copy h2 {
+  margin: 0 0 15px;
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 5vw, 5rem);
+  line-height: 0.88;
+  letter-spacing: -0.05em;
+}
+
+.suggest-copy h2 span {
+  color: #fff;
+  -webkit-text-stroke: 2px var(--ink);
+}
+
+.suggest-copy p {
+  max-width: 570px;
+  margin-bottom: 24px;
+  color: rgba(23, 23, 23, 0.72);
   line-height: 1.65;
 }
 
-.submit-btn {
-  flex-shrink: 0;
-  display: inline-block;
-  padding: 12px 24px;
-  border: 0;
-  border-radius: 8px;
-  background: var(--accent);
-  color: #000;
-  font-weight: 700;
-  font-size: 0.9rem;
-  font-family: var(--font-body);
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.25s;
-}
-
-.submit-btn:hover {
-  background: var(--gold-light);
-  transform: translateY(-2px);
+.dark-button {
+  background: var(--ink);
+  color: #fff;
 }
 
 .suggest-form {
-  margin-top: 14px;
-  padding: 28px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--rad2);
+  margin-top: 18px;
+  padding: 30px;
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 6px 6px 0 var(--ink);
 }
 
-.suggest-form-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 25px;
-}
-
-.suggest-form-header h3 {
-  margin-top: 6px;
+.form-title h3 {
+  margin: 0 0 25px;
   font-family: var(--font-display);
-  font-size: 1.4rem;
-}
-
-.form-close,
-.close-results {
-  border: 0;
-  background: var(--surface2);
-  color: var(--text2);
-  cursor: pointer;
-  border-radius: 8px;
-}
-
-.form-close {
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
+  font-size: 2rem;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 16px;
 }
 
 .form-grid label {
@@ -1569,161 +2315,213 @@ const visibleRegions = computed(() => {
   grid-column: 1 / -1;
 }
 
-.form-grid label > span {
-  color: var(--text2);
-  font-size: 0.75rem;
+.form-grid label span {
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .form-grid input,
 .form-grid textarea {
   width: 100%;
-  border: 1px solid var(--border);
+  border: 2px solid var(--ink);
+  border-radius: 9px;
   outline: 0;
-  border-radius: 8px;
-  padding: 12px 14px;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
+  padding: 12px 13px;
+  background: var(--paper);
+  color: var(--ink);
   resize: vertical;
 }
 
 .form-grid input:focus,
 .form-grid textarea:focus {
-  border-color: var(--border-gold);
+  background: var(--yellow);
 }
 
-.suggest-form-footer {
+.form-bottom {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 20px;
-  margin-top: 22px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
 }
 
-.suggest-form-footer p {
-  color: var(--text2);
-  font-size: 0.78rem;
+.form-bottom > span {
+  color: var(--muted);
+  font-size: 0.72rem;
 }
 
-/* =========================
+/* =========================================================
    ARCHIVE
-========================= */
+   ========================================================= */
 
 .archive-section {
-  padding-top: 20px;
+  padding: 30px 0 90px;
+  background: var(--paper-2);
 }
 
-.archive-toggle {
+.archive-trigger {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 22px 24px;
-  border: 1px solid var(--border);
-  border-radius: var(--rad2);
-  background: var(--surface);
-  color: var(--text);
-  text-align: left;
+  padding: 18px 20px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: #fff;
   cursor: pointer;
+  box-shadow: 4px 4px 0 var(--ink);
+  font-weight: 900;
 }
 
-.archive-toggle strong {
-  display: block;
-  margin-top: 5px;
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-}
-
-.archive-arrow {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--surface2);
-  color: var(--accent);
-  transition: transform 0.25s;
-}
-
-.archive-arrow.open {
-  transform: rotate(180deg);
-}
-
-.archive-results {
-  margin-top: 14px;
-  padding: 24px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--rad2);
-}
-
-.archive-filter-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 20px;
-  color: var(--text2);
-  font-size: 0.8rem;
-}
-
-.close-results {
+.archive-trigger span {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
+  gap: 9px;
 }
 
-/* =========================
-   RESPONSIVE
-========================= */
+.archive-trigger strong {
+  font-size: 1.5rem;
+}
 
-@media (max-width: 1100px) {
-  .regions-grid {
+.archive-drawer {
+  background: var(--paper);
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1000px) {
+  .hero-inner {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-copy {
+    padding-bottom: 20px;
+  }
+
+  .hero-stage {
+    position: absolute;
+    width: 48%;
+    right: 0;
+    top: 100px;
+    opacity: 0.6;
+  }
+
+  .hero-copy {
+    position: relative;
+    z-index: 4;
+    max-width: 720px;
+  }
+
+  .result-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .city-mosaic {
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .interest-grid {
+  .interest-row {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .meetup-results-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .suggest-card {
+    grid-template-columns: 0.65fr 1.35fr;
   }
 }
 
-@media (max-width: 800px) {
-  .meetups-intro {
-    padding-top: 90px;
+@media (max-width: 700px) {
+  .container {
+    width: min(100% - 24px, 1180px);
   }
 
-  .regions-grid {
+  .section {
+    padding: 75px 0;
+  }
+
+  .event-hero {
+    min-height: 650px;
+  }
+
+  .hero-inner {
+    min-height: 600px;
+  }
+
+  .hero-copy {
+    padding-top: 75px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(3.7rem, 17vw, 6rem);
+  }
+
+  .hero-stage {
+    display: none;
+  }
+
+  .hero-bottom-inner span:nth-last-child(1) {
+    display: none;
+  }
+
+  .section-heading {
+    display: block;
+  }
+
+  .section-heading p {
+    margin-top: 18px;
+  }
+
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .city-mosaic {
     grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 175px;
   }
 
-  .upcoming-grid {
+  .city-large {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
+
+  .city-tall {
+    grid-row: span 1;
+  }
+
+  .city-info strong {
+    font-size: 2rem;
+  }
+
+  .interest-row {
     grid-template-columns: 1fr;
   }
 
-  .suggest-box {
-    align-items: flex-start;
-    flex-direction: column;
-    padding: 28px;
+  .event-card {
+    grid-template-columns: 70px 1fr;
   }
 
-  .result-header {
-    align-items: flex-start;
-    flex-direction: column;
+  .event-go {
+    grid-column: 2;
+    justify-self: start;
   }
-}
 
-@media (max-width: 600px) {
-  .regions-grid,
-  .interest-grid,
-  .meetup-results-grid {
+  .suggest-card {
     grid-template-columns: 1fr;
+  }
+
+  .suggest-art {
+    min-height: 270px;
+    border-right: 0;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .suggest-copy {
+    padding: 35px 25px;
   }
 
   .form-grid {
@@ -1734,20 +2532,52 @@ const visibleRegions = computed(() => {
     grid-column: auto;
   }
 
-  .suggest-form-footer {
+  .form-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-wrap {
+    min-height: 60px;
+  }
+
+  .search-count {
+    display: none;
+  }
+
+  .result-drawer {
+    padding: 18px;
+  }
+
+  .drawer-heading {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .archive-filter-row {
-    align-items: flex-start;
-    flex-direction: column;
+  .city-mosaic {
+    grid-template-columns: 1fr;
   }
 
-  .inline-results,
-  .interest-results,
-  .archive-results {
-    padding: 16px;
+  .city-large {
+    grid-column: auto;
+  }
+
+  .city-card {
+    min-height: 210px;
+  }
+
+  .event-card {
+    grid-template-columns: 1fr;
+  }
+
+  .event-date {
+    width: 76px;
+  }
+
+  .event-go {
+    grid-column: auto;
   }
 }
 </style>
