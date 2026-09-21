@@ -18,19 +18,19 @@
         <div class="hero-copy">
           <div class="eyebrow">
             <span class="live-dot"></span>
-            Sundarbans Community Events
+            Sundarbans Community Meetups
           </div>
 
           <h1>
             Don't just
-            <span class="scribble-word">attend.</span>
+            <span class="scribble-word">scroll.</span>
             <br />
             <span class="hero-highlight">belong.</span>
           </h1>
 
           <p>
-            Find something happening around you, meet people who share your
-            interests, or create the next thing everyone talks about.
+            Find your people, discover what your city is doing, and turn an online
+            connection into an actual meetup.
           </p>
 
           <div class="hero-actions">
@@ -39,15 +39,20 @@
               Find a meetup
             </button>
 
-            <button class="hero-button secondary" type="button" @click="toggleSuggestion">
+            <a
+              class="hero-button secondary"
+              href="https://forms.gle/iHeYQsAbsUTBHJJC6"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Plus :size="18" />
-              Suggest one
-            </button>
+              Suggest a meetup
+            </a>
           </div>
 
           <div class="hero-note">
             <span>⌁</span>
-            Search by city, topic, venue, meetup number or anything you remember.
+            Search a city, topic, venue, meetup number or anything you remember.
           </div>
         </div>
 
@@ -61,16 +66,16 @@
             <div class="ticket-hole hole-two"></div>
 
             <div class="ticket-top">
-              <span class="ticket-label">NEXT UP</span>
+              <span class="ticket-label">MEETUPS</span>
               <span class="ticket-mark">✦</span>
             </div>
 
             <div class="ticket-title">
               MEET
               <br />
-              SOMEONE
+              YOUR
               <br />
-              NEW.
+              PEOPLE.
             </div>
 
             <div class="ticket-meta">
@@ -88,8 +93,8 @@
           <div class="floating-doodle doodle-smile">⌣</div>
           <div class="floating-doodle doodle-star">✦</div>
           <div class="floating-doodle doodle-arrow">↗</div>
-          <div class="floating-label label-one">GOOD<br />PEOPLE</div>
-          <div class="floating-label label-two">GOOD<br />IDEAS</div>
+          <div class="floating-label label-one">YOUR<br />PEOPLE</div>
+          <div class="floating-label label-two">REAL<br />MEETUPS</div>
         </div>
       </div>
 
@@ -174,11 +179,11 @@
         <div class="section-heading">
           <div>
             <span class="mini-label">WHERE THE COMMUNITY LIVES</span>
-            <h2>Pick your <span>scene.</span></h2>
+            <h2>Find your <span>city.</span></h2>
           </div>
 
           <p>
-            Every city has its own rhythm. Open a chapter to see its meetups.
+            Open a chapter and see what your local community is getting up to.
           </p>
         </div>
 
@@ -194,7 +199,7 @@
             }"
             @click="goToRegion(region.slug)"
           >
-            <img :src="region.image" :alt="region.name" loading="lazy" />
+            <img :src="region.image" :alt="region.name" loading="lazy" decoding="async" width="1000" height="700" />
 
             <div class="city-shade"></div>
 
@@ -227,8 +232,8 @@
       <div class="container">
         <div class="section-heading centered">
           <span class="mini-label">CHOOSE YOUR ADVENTURE</span>
-          <h2>What do you want to <span>do?</span></h2>
-          <p>Tap one. We will put the relevant events right underneath.</p>
+          <h2>What are you looking <span>for?</span></h2>
+          <p>Pick one and the relevant meetups appear right underneath.</p>
         </div>
 
         <div class="interest-row">
@@ -286,11 +291,11 @@
         <div class="section-heading">
           <div>
             <span class="mini-label">DON'T MISS THIS</span>
-            <h2>Coming <span>up.</span></h2>
+            <h2>Meetups <span>coming up.</span></h2>
           </div>
 
           <p>
-            Only currently scheduled events live here. The archive stays out of
+            Only currently scheduled events live here. THE MEETUP ARCHIVE stays out of
             your way until you ask for it.
           </p>
         </div>
@@ -345,9 +350,14 @@
           <div class="empty-face">:)</div>
           <h3>Nothing scheduled yet.</h3>
           <p>That means you have an excellent opportunity to suggest something.</p>
-          <button type="button" class="dark-button" @click="toggleSuggestion">
-            Start an idea →
-          </button>
+          <a
+            class="dark-button"
+            href="https://forms.gle/iHeYQsAbsUTBHJJC6"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Suggest a meetup →
+          </a>
         </div>
       </div>
     </section>
@@ -355,7 +365,7 @@
     <!-- =========================================================
          SUGGEST A MEETUP
          ========================================================= -->
-    <section ref="suggestionSection" class="section suggestion-section">
+    <section class="section suggestion-section">
       <div class="container">
         <div class="suggest-card">
           <div class="suggest-art" aria-hidden="true">
@@ -369,73 +379,24 @@
           </div>
 
           <div class="suggest-copy">
-            <span class="mini-label">YOUR TURN</span>
-            <h2>Have an idea?<br /><span>Make it real.</span></h2>
+            <span class="mini-label">START SOMETHING</span>
+            <h2>Got an idea?<br /><span>Start a meetup.</span></h2>
             <p>
-              A coding night, chai meetup, study circle, game night, design jam,
-              anything. Tell the community what you want to happen.
+              A coding session, chai meetup, study circle, game night, design jam — anything.
+              Suggest it and send the idea to the community team.
             </p>
 
-            <button type="button" class="dark-button" @click="showSuggestion = !showSuggestion">
-              {{ showSuggestion ? 'Close suggestion' : 'Suggest a meetup →' }}
-            </button>
-          </div>
-        </div>
-
-        <!-- FORM DIRECTLY BELOW SUGGESTION -->
-        <div v-if="showSuggestion" class="suggest-form">
-          <div class="form-title">
-            <span class="mini-label">NEW EVENT IDEA</span>
-            <h3>What should we build together?</h3>
-          </div>
-
-          <div class="form-grid">
-            <label>
-              <span>Your name</span>
-              <input v-model="suggestion.name" type="text" placeholder="Prateek" />
-            </label>
-
-            <label>
-              <span>City</span>
-              <input v-model="suggestion.city" type="text" placeholder="Bangalore" />
-            </label>
-
-            <label>
-              <span>Meetup name</span>
-              <input
-                v-model="suggestion.title"
-                type="text"
-                placeholder="Saturday AI & Chai"
-              />
-            </label>
-
-            <label>
-              <span>Preferred date</span>
-              <input v-model="suggestion.date" type="date" />
-            </label>
-
-            <label class="full">
-              <span>Tell us about it</span>
-              <textarea
-                v-model="suggestion.description"
-                rows="5"
-                placeholder="What would people actually do at this meetup?"
-              ></textarea>
-            </label>
-          </div>
-
-          <div class="form-bottom">
-            <span>Ready? Send the idea to the community team.</span>
             <a
+              class="dark-button"
               href="https://forms.gle/iHeYQsAbsUTBHJJC6"
               target="_blank"
               rel="noopener noreferrer"
-              class="dark-button"
             >
-              Submit idea →
+              Suggest a meetup →
             </a>
           </div>
         </div>
+
       </div>
     </section>
 
@@ -451,7 +412,7 @@
         >
           <span>
             <Archive :size="19" />
-            {{ showPast ? 'Hide past events' : 'See what already happened' }}
+            {{ showPast ? 'Hide past events' : 'Explore past meetups' }}
           </span>
           <strong>{{ showPast ? '−' : '+' }}</strong>
         </button>
@@ -460,16 +421,60 @@
           <div class="drawer-heading">
             <div>
               <span class="mini-label">THE ARCHIVE</span>
-              <h2>Good things that happened.</h2>
+              <h2>Meetups we've already shared.</h2>
             </div>
             <span>{{ filteredPast.length }} events</span>
           </div>
 
-          <MeetupResults
-            :items="filteredPast"
-            empty-title="No archived events found"
-            empty-text="Try clearing your search."
-          />
+          <div v-if="filteredPast.length" class="past-board">
+            <article
+              v-for="item in filteredPast"
+              :key="item.key"
+              class="past-card"
+            >
+              <div class="past-date">
+                <span>{{ item.month || 'PAST' }}</span>
+                <strong>{{ item.day || '—' }}</strong>
+              </div>
+
+              <div class="past-main">
+                <div class="past-topline">
+                  <span>{{ item.city }}</span>
+                  <span v-if="item.meetupNumber">{{ item.meetupNumber }}</span>
+                </div>
+
+                <h3>{{ item.title }}</h3>
+
+                <p>{{ item.about }}</p>
+
+                <div class="past-meta">
+                  <span v-if="item.location">
+                    <MapPin :size="14" />
+                    {{ item.location }}
+                  </span>
+                  <span v-if="item.tags?.length">
+                    {{ item.tags.slice(0, 3).join(' · ') }}
+                  </span>
+                </div>
+              </div>
+
+              <a
+                v-if="item.instaUrl"
+                :href="item.instaUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="past-link"
+              >
+                Details →
+              </a>
+            </article>
+          </div>
+
+          <div v-else class="result-empty">
+            <div class="empty-star">✦</div>
+            <h3>No archived meetups found</h3>
+            <p>Try clearing your search.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -500,23 +505,13 @@ const router = useRouter();
 
 const heroRef = ref(null);
 const searchSection = ref(null);
-const suggestionSection = ref(null);
 
 const searchQuery = ref('');
 const activeInterest = ref(null);
-const showSuggestion = ref(false);
 const showPast = ref(false);
 
 const heroX = ref(0);
 const heroY = ref(0);
-
-const suggestion = ref({
-  name: '',
-  city: '',
-  title: '',
-  date: '',
-  description: '',
-});
 
 const imageBase = 'https://res.cloudinary.com/l59gy0g2/image/upload/f_auto,q_auto:good,w_1000,c_limit';
 
@@ -893,19 +888,6 @@ function focusSearch() {
     const input = searchSection.value?.querySelector('input');
     input?.focus();
   });
-}
-
-function toggleSuggestion() {
-  showSuggestion.value = !showSuggestion.value;
-
-  if (showSuggestion.value) {
-    requestAnimationFrame(() => {
-      suggestionSection.value?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
-    });
-  }
 }
 
 function handleHeroMove(event) {
@@ -2434,6 +2416,15 @@ onBeforeUnmount(() => {
   }
 }
 
+  .past-card {
+    grid-template-columns: 68px 1fr;
+  }
+
+  .past-link {
+    grid-column: 2;
+    justify-self: start;
+  }
+
 @media (max-width: 700px) {
   .container {
     width: min(100% - 24px, 1180px);
@@ -2580,4 +2571,125 @@ onBeforeUnmount(() => {
     grid-column: auto;
   }
 }
+
+/* Past meetups use the same visual language as upcoming meetups,
+   but stay compact so long descriptions never become three huge columns. */
+.past-board {
+  display: grid;
+  gap: 12px;
+}
+
+.past-card {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 17px;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.past-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.past-date {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 76px;
+  border: 2px solid var(--ink);
+  border-radius: 11px;
+  background: var(--paper-2);
+}
+
+.past-date span {
+  font-size: 0.55rem;
+  font-weight: 900;
+}
+
+.past-date strong {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  line-height: 0.9;
+}
+
+.past-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.past-main h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  line-height: 1.05;
+}
+
+.past-main p {
+  display: -webkit-box;
+  overflow: hidden;
+  max-width: 800px;
+  margin: 7px 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.past-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.65rem;
+}
+
+.past-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.past-link {
+  white-space: nowrap;
+  padding: 9px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--yellow);
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+/* Render below-the-fold sections only when needed; this reduces initial
+   layout/paint work without removing content or functionality. */
+.cities-section,
+.interests-section,
+.upcoming-section,
+.suggestion-section,
+.archive-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 700px;
+}
+
+.city-card img {
+  display: block;
+  content-visibility: auto;
+}
+
 </style>
