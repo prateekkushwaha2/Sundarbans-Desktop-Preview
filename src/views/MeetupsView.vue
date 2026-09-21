@@ -231,9 +231,9 @@
     <section class="section interests-section">
       <div class="container">
         <div class="section-heading centered">
-          <span class="mini-label">CHOOSE YOUR ADVENTURE</span>
+          <span class="mini-label">FIND YOUR KIND OF MEETUP</span>
           <h2>What are you looking <span>for?</span></h2>
-          <p>Pick one and the relevant meetups appear right underneath.</p>
+          <p>Choose a vibe and we’ll show the meetups that fit it.</p>
         </div>
 
         <div class="interest-row">
@@ -261,23 +261,26 @@
         <div v-if="activeInterest" class="result-drawer interest-drawer">
           <div class="drawer-heading">
             <div>
-              <span class="mini-label">YOU CHOSE</span>
+              <span class="mini-label">MEETUPS FOR YOU</span>
               <h2>{{ activeInterestLabel }}</h2>
             </div>
 
-            <button
-              type="button"
-              class="text-button"
-              @click="activeInterest = null"
-            >
-              Clear ×
-            </button>
+            <div class="interest-result-tools">
+              <span>{{ interestResults.length }} {{ interestResults.length === 1 ? 'meetup' : 'meetups' }}</span>
+              <button
+                type="button"
+                class="text-button"
+                @click="activeInterest = null"
+              >
+                Clear ×
+              </button>
+            </div>
           </div>
 
           <MeetupResults
             :items="interestResults"
             empty-title="No exact matches yet"
-            empty-text="There aren't enough tagged events here yet. Be the person who starts one."
+            empty-text="There aren’t enough tagged meetups here yet. Be the person who starts one."
           />
         </div>
       </div>
@@ -295,7 +298,7 @@
           </div>
 
           <p>
-            Only currently scheduled events live here. THE MEETUP ARCHIVE stays out of
+            Only currently scheduled meetups live here. The archive stays out of
             your way until you ask for it.
           </p>
         </div>
@@ -412,7 +415,7 @@
         >
           <span>
             <Archive :size="19" />
-            {{ showPast ? 'Hide past events' : 'Explore past meetups' }}
+            {{ showPast ? 'Hide past meetups' : 'Explore past meetups' }}
           </span>
           <strong>{{ showPast ? '−' : '+' }}</strong>
         </button>
@@ -423,7 +426,7 @@
               <span class="mini-label">THE ARCHIVE</span>
               <h2>Meetups we've already shared.</h2>
             </div>
-            <span>{{ filteredPast.length }} events</span>
+            <span>{{ filteredPast.length }} meetups</span>
           </div>
 
           <div v-if="filteredPast.length" class="past-board">
@@ -2009,6 +2012,260 @@ onBeforeUnmount(() => {
   font-size: 0.72rem;
   font-weight: 900;
   cursor: pointer;
+}
+
+
+/* =========================================================
+   INTEREST RESULTS — COMPACT MEETUP DISCOVERY LIST
+   ========================================================= */
+
+.interest-drawer {
+  margin-top: 18px;
+  padding: 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.interest-drawer .drawer-heading {
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.interest-drawer .drawer-heading h2 {
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.interest-drawer .drawer-heading .mini-label {
+  font-size: 0.58rem;
+}
+
+.interest-result-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.interest-result-tools .text-button {
+  padding: 7px 10px;
+  border: 1px solid rgba(20, 20, 20, 0.22);
+  border-radius: 999px;
+  background: #fff;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.interest-result-tools .text-button:hover {
+  background: var(--ink);
+  color: #fff;
+}
+
+.interest-drawer .result-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 9px;
+}
+
+.interest-drawer .mini-event-card {
+  display: grid;
+  grid-template-columns: minmax(125px, 0.28fr) minmax(0, 1fr) auto;
+  grid-template-areas:
+    "top title links"
+    "top meta links"
+    "top about links"
+    "top tags links";
+  align-items: center;
+  column-gap: 18px;
+  row-gap: 5px;
+  min-height: 112px;
+  padding: 15px 16px;
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.interest-drawer .mini-event-card:hover {
+  transform: translateX(3px);
+  box-shadow: 4px 4px 0 var(--ink);
+  background: #fffdf5;
+}
+
+.interest-drawer .mini-event-top {
+  grid-area: top;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 7px;
+  align-self: stretch;
+  margin: 0;
+  padding-right: 16px;
+  border-right: 1px dashed rgba(20, 20, 20, 0.28);
+}
+
+.interest-drawer .mini-event-city {
+  font-size: 0.62rem;
+  line-height: 1.2;
+}
+
+.interest-drawer .upcoming-chip,
+.interest-drawer .past-chip {
+  font-size: 0.5rem;
+  padding: 3px 6px;
+}
+
+.interest-drawer .mini-event-card h3 {
+  grid-area: title;
+  margin: 0;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 1.08rem;
+  line-height: 1.15;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.interest-drawer .mini-event-meta {
+  grid-area: meta;
+  gap: 10px;
+  min-width: 0;
+  font-size: 0.64rem;
+}
+
+.interest-drawer .mini-event-meta span {
+  min-width: 0;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.interest-drawer .mini-event-card > p {
+  grid-area: about;
+  max-width: 720px;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.69rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.interest-drawer .mini-tags {
+  grid-area: tags;
+  min-width: 0;
+  max-height: 22px;
+  overflow: hidden;
+}
+
+.interest-drawer .mini-tags span {
+  padding: 3px 6px;
+  font-size: 0.56rem;
+  border: 1px solid rgba(20, 20, 20, 0.1);
+}
+
+.interest-drawer .mini-event-links {
+  grid-area: links;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  min-width: 72px;
+  margin: 0;
+  padding-left: 12px;
+  border-left: 1px dashed rgba(20, 20, 20, 0.28);
+}
+
+.interest-drawer .mini-event-links a {
+  white-space: nowrap;
+  font-size: 0.64rem;
+}
+
+.interest-drawer .result-empty {
+  padding: 24px 10px 8px;
+}
+
+@media (max-width: 820px) {
+  .interest-drawer .mini-event-card {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "top links"
+      "title links"
+      "meta links"
+      "about links"
+      "tags links";
+    column-gap: 12px;
+  }
+
+  .interest-drawer .mini-event-top {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 0 0 7px;
+    border-right: 0;
+    border-bottom: 1px dashed rgba(20, 20, 20, 0.28);
+  }
+}
+
+@media (max-width: 560px) {
+  .interest-drawer {
+    padding: 14px;
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+
+  .interest-drawer .drawer-heading {
+    margin-bottom: 11px;
+  }
+
+  .interest-result-tools {
+    gap: 7px;
+  }
+
+  .interest-result-tools > span {
+    display: none;
+  }
+
+  .interest-drawer .drawer-heading h2 {
+    font-size: 1.3rem;
+  }
+
+  .interest-drawer .mini-event-card {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "top"
+      "title"
+      "meta"
+      "about"
+      "tags"
+      "links";
+    padding: 13px;
+  }
+
+  .interest-drawer .mini-event-top {
+    padding-bottom: 8px;
+  }
+
+  .interest-drawer .mini-event-card > p {
+    -webkit-line-clamp: 2;
+  }
+
+  .interest-drawer .mini-event-links {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 8px 0 0;
+    border-left: 0;
+    border-top: 1px dashed rgba(20, 20, 20, 0.28);
+  }
 }
 
 /* =========================================================
